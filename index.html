@@ -1,0 +1,1199 @@
+<title>C/PROJECT Station Board</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* C/PROJECT station board — light single theme: grey ground, white cards, sage highlights. */
+:root{
+  --ground:#EDEDEA;
+  --paper:#FFFFFF;
+  --tint:#F5F5F3;
+  --tint-2:#EAEAE6;
+  --ink:#1C1C1A;
+  --ink-2:#55554F;
+  --muted:#8E8E86;
+  --line:#E8E8E4;
+  --line-2:#D6D6D0;
+  --accent:#5B6454;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#DFE4D9;
+  --accent-lite:#AFB9A3;
+  --on:#1C1C1A;
+  --on-ink:#FFFFFF;
+  --hold:#9A6B12;
+  --hold-bg:#FBF2DD;
+  --alert:#A3302A;
+  --alert-bg:#FBEEED;
+  --ok:#2F6B3A;
+  --r:22px;
+  --r-sm:14px;
+  --pill:999px;
+  --lift:0 1px 2px rgba(28,28,26,.04);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{background:var(--ground)}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"DM Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size:14px;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1260px; margin:0 auto; padding:0 16px; padding-block:0 44px}
+button{font:inherit; color:inherit; cursor:pointer}
+input,select{font:inherit; color:var(--ink)}
+:focus-visible{outline:2px solid var(--ink); outline-offset:2px; border-radius:4px}
+.num{font-variant-numeric:tabular-nums}
+.eyebrow{
+  font-size:10px; font-weight:500; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--muted);
+}
+
+/* ---------- identity ---------- */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  background:var(--paper); border-radius:var(--pill); box-shadow:var(--lift);
+  padding:15px 24px; margin-top:16px;
+}
+.wordmark{
+  font-size:16px; font-weight:600; letter-spacing:-.03em; text-transform:uppercase;
+  color:var(--ink); line-height:1;
+}
+.addr{font-size:12.5px; color:var(--muted); letter-spacing:.01em}
+.mast{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:18px; flex-wrap:wrap;
+  padding:24px 8px 18px;
+}
+.mast h1{
+  font-size:clamp(30px,4.6vw,44px); font-weight:600; letter-spacing:-.04em;
+  margin:8px 0 0; line-height:1; text-wrap:balance;
+}
+.mast .sub{color:var(--ink-2); font-size:13px; margin:9px 0 0; max-width:54ch}
+.status{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.pill{
+  display:inline-flex; align-items:center; gap:7px; padding:7px 14px;
+  border-radius:var(--pill); background:var(--paper); box-shadow:var(--lift);
+  font-size:10px; font-weight:500; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--ink-2); white-space:nowrap;
+}
+.dot{width:7px; height:7px; border-radius:50%; background:var(--muted); flex:none}
+.pill.live{color:var(--ink)}
+.pill.live .dot{background:var(--accent); box-shadow:0 0 0 3px rgba(91,100,84,.22)}
+.pill.offline{color:var(--hold); background:var(--hold-bg)}
+.pill.offline .dot{background:var(--hold)}
+
+/* ---------- toolbar ---------- */
+.bar{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  background:var(--paper); border-radius:var(--pill); box-shadow:var(--lift);
+  padding:9px 11px; margin-bottom:12px;
+}
+.month{
+  font-size:19px; font-weight:600; letter-spacing:-.04em; min-width:9.5ch; padding:0 6px;
+}
+.nav{display:flex; gap:5px}
+.icon{
+  width:34px; height:34px; display:grid; place-items:center; background:var(--tint);
+  border:0; border-radius:50%; line-height:1; font-size:14px; color:var(--ink);
+  transition:background .14s;
+}
+.icon:hover{background:var(--tint-2)}
+.btn{
+  padding:8px 16px; border:0; border-radius:var(--pill);
+  background:var(--tint); font-size:12.5px; font-weight:500; white-space:nowrap;
+  color:var(--ink); transition:background .14s, color .14s;
+}
+.btn:hover{background:var(--tint-2)}
+.btn.primary{background:var(--ink); color:var(--on-ink)}
+.btn.primary:hover{background:#333330}
+.btn.quiet{background:transparent; box-shadow:inset 0 0 0 1px var(--line-2); color:var(--ink-2)}
+.btn.quiet:hover{background:var(--tint)}
+.btn.danger{background:transparent; box-shadow:inset 0 0 0 1px #E0BDBA; color:var(--alert)}
+.btn.danger:hover{background:var(--alert-bg)}
+.btn.sm{padding:6px 13px; font-size:11.5px}
+.btn.armed{background:var(--alert); color:#FFFFFF; box-shadow:none}
+.btn[aria-pressed="true"]{background:var(--ink); color:var(--on-ink)}
+.spacer{flex:1 1 auto}
+
+/* ---------- studio code ---------- */
+.mgrbox{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  background:var(--ink); border-radius:var(--r); padding:14px 18px; margin-bottom:12px;
+}
+.mgrbox.hide{display:none}
+.mgrbox label{margin:0; color:var(--accent-lite)}
+.mgrbox input{
+  font-size:13.5px; padding:8px 14px; border:0; border-radius:var(--pill);
+  background:#2C2C29; color:#FFFFFF; width:160px; letter-spacing:.24em;
+}
+.mgrbox input.warn{background:#4A2320; box-shadow:inset 0 0 0 1px #C4635C}
+.mgrbox .btn.primary{background:var(--accent-lite); color:var(--ink)}
+.mgrbox .btn.primary:hover{background:#C2CBB7}
+.mgrmsg{font-size:12px; color:#A9A9A1}
+.mgrmsg.bad{color:#F0A8A2; font-weight:500}
+
+/* ---------- layout ---------- */
+.cols{display:grid; grid-template-columns:minmax(0,1fr) 388px; gap:12px; align-items:start}
+@media (max-width:940px){ .cols{grid-template-columns:1fr} }
+.card{background:var(--paper); border-radius:var(--r); box-shadow:var(--lift)}
+
+/* ---------- calendar ---------- */
+.cal{padding:16px}
+.dow{display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:8px}
+.dow span{text-align:center; padding-bottom:2px}
+.grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px}
+.day{
+  position:relative; display:flex; flex-direction:column; align-items:center; gap:8px;
+  min-height:88px; padding:11px 4px 10px; background:var(--tint);
+  border:0; box-shadow:inset 0 0 0 1.5px transparent; border-radius:var(--r-sm);
+  text-align:center; transition:background .14s, box-shadow .14s;
+}
+.day:hover{background:var(--tint-2)}
+.day.blank{background:transparent; pointer-events:none}
+.dnum{
+  font-variant-numeric:tabular-nums;
+  font-size:16px; font-weight:500; width:28px; height:28px;
+  display:grid; place-items:center; border-radius:50%; line-height:1;
+}
+.day.today .dnum{box-shadow:inset 0 0 0 1.5px var(--ink); font-weight:600}
+.day.inrange{background:var(--accent-soft)}
+.day.edge{background:var(--accent-soft); box-shadow:inset 0 0 0 1.5px var(--ink)}
+.day.sel{background:var(--paper); box-shadow:inset 0 0 0 1.5px var(--ink)}
+.day.edge .dnum,.day.sel .dnum{background:var(--ink); color:var(--on-ink); box-shadow:none}
+.pips{display:flex; gap:3px}
+.pip{width:9px; height:9px; border-radius:3px; background:transparent; box-shadow:inset 0 0 0 1.25px var(--line-2)}
+.pip.on{background:var(--on); box-shadow:none}
+.pip.hold{background:var(--hold); box-shadow:none}
+.cnt{font-size:10px; font-weight:500; color:var(--muted); font-variant-numeric:tabular-nums}
+.day.full .cnt{color:var(--ink); font-weight:600}
+.day.closed{background:repeating-linear-gradient(135deg,var(--tint),var(--tint) 4px,var(--tint-2) 4px,var(--tint-2) 8px)}
+.day.closed .pips{opacity:.18}
+.wknd .dnum{color:var(--ink-2)}
+
+/* ---------- day panel ---------- */
+.panel{overflow:hidden; position:sticky; top:12px}
+.phead{padding:18px 20px 17px}
+.phead .eyebrow{
+  display:inline-block; background:var(--accent); color:var(--accent-ink);
+  padding:4px 11px; border-radius:var(--pill); letter-spacing:.1em; font-weight:600;
+}
+.phead h2{
+  font-size:26px; font-weight:600; margin:11px 0 0; letter-spacing:-.04em; line-height:1.1;
+}
+.phead .tally{display:block; margin-top:7px; font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums}
+.bookas{padding:4px 20px 18px}
+.bookas label{display:block; margin-bottom:7px}
+.namerow{display:flex; gap:6px}
+.namerow input{
+  flex:1 1 auto; min-width:0; font-size:13.5px; padding:9px 15px;
+  border:0; border-radius:var(--pill); background:var(--tint);
+}
+.namerow input::placeholder{color:var(--muted)}
+.namerow input.warn{background:var(--alert-bg); box-shadow:inset 0 0 0 1px #E0BDBA}
+.slots{list-style:none; margin:0; padding:0 12px}
+.slot{
+  display:flex; align-items:center; gap:11px; padding:11px 8px;
+  border-radius:var(--r-sm); min-height:60px;
+}
+.slot + .slot{box-shadow:inset 0 1px 0 var(--line)}
+.stn{
+  flex:none; width:34px; height:34px; border-radius:11px; display:grid; place-items:center;
+  font-size:14px; font-weight:500;
+  font-variant-numeric:tabular-nums;
+  background:var(--tint); color:var(--ink-2);
+}
+.slot.taken .stn{background:var(--on); color:var(--on-ink)}
+.slot.held .stn{background:var(--hold); color:#FFFFFF}
+.who{flex:1 1 auto; min-width:0}
+.who .name{font-weight:500; overflow-wrap:anywhere}
+.who .note{font-size:11.5px; color:var(--muted); overflow-wrap:anywhere}
+.who .open{color:var(--muted)}
+.acts{flex:none; display:flex; gap:5px}
+.pfoot{padding:14px 20px 18px; display:flex; gap:7px; flex-wrap:wrap}
+.hint{padding:6px 20px 18px; font-size:12.5px; color:var(--muted)}
+
+/* ---------- events ---------- */
+.day .evt{
+  position:absolute; top:8px; right:8px; width:6px; height:6px;
+  border-radius:50%; background:var(--accent);
+}
+.evtbox{padding:2px 20px 14px}
+.elist{list-style:none; margin:0; padding:0}
+.elist li{display:flex; align-items:baseline; gap:10px; padding:8px 0}
+.elist li + li{box-shadow:inset 0 1px 0 var(--line)}
+.evtwhen{
+  flex:none; font-weight:600; font-size:12.5px; color:var(--accent-ink);
+  background:var(--accent); padding:3px 9px; border-radius:var(--pill);
+  font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+.evtday{flex:none; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap}
+.evtname{flex:1 1 auto; min-width:0; overflow-wrap:anywhere; font-weight:500}
+.evtdrop{
+  flex:none; border:0; background:transparent; color:var(--muted);
+  font-size:16px; line-height:1; padding:0 2px;
+}
+.evtdrop:hover{color:var(--alert)}
+.evtform{padding:2px 20px 16px}
+.evtform.hide{display:none}
+.evtform label{display:block; margin-bottom:7px}
+.evtrow{display:flex; gap:6px; flex-wrap:wrap}
+.evtrow input[type="text"]{
+  flex:1 1 150px; min-width:0; font-size:13.5px; padding:9px 15px;
+  border:0; border-radius:var(--pill); background:var(--tint);
+}
+.evtrow input[type="time"]{
+  flex:0 0 auto; font-size:13.5px; padding:9px 14px;
+  border:0; border-radius:var(--pill); background:var(--tint); color:var(--ink);
+}
+.evtrow input.warn{background:var(--alert-bg); box-shadow:inset 0 0 0 1px #E0BDBA}
+.evthint{display:block; margin-top:8px; font-size:12px; color:var(--muted)}
+
+/* ---------- lower row ---------- */
+.lower{display:grid; grid-template-columns:repeat(auto-fit,minmax(262px,1fr)); gap:12px; margin-top:12px}
+.box{padding:18px 20px}
+.box h3{
+  font-size:19px; font-weight:600; margin:9px 0 13px; letter-spacing:-.04em;
+}
+.tlist{list-style:none; margin:0; padding:0}
+.tlist li{display:flex; align-items:center; gap:10px; padding:7px 0}
+.tlist li + li{box-shadow:inset 0 1px 0 var(--line)}
+.tlist .nm{flex:1 1 auto; min-width:0; overflow-wrap:anywhere; font-weight:500}
+.tlist .bars{display:flex; gap:2px; flex:none}
+.tlist .bars i{width:6px; height:17px; border-radius:2px; background:var(--accent); display:block}
+.tlist .n{
+  font-size:15px; font-weight:500;
+  color:var(--ink); min-width:2.5ch; text-align:right; font-variant-numeric:tabular-nums;
+}
+.legend{display:flex; flex-direction:column; gap:9px}
+.legend div{display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--ink-2)}
+.sw{width:12px; height:12px; border-radius:4px; flex:none}
+.empty{color:var(--muted); font-size:12.5px}
+.tag{
+  font-size:9.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+  padding:2px 7px; border-radius:var(--pill); background:var(--hold-bg); color:var(--hold);
+  margin-left:7px; white-space:nowrap;
+}
+.notice{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:13px 18px; margin-bottom:12px; border-radius:var(--r);
+  background:var(--hold-bg); color:var(--ink); font-size:13px;
+}
+.notice.hide{display:none}
+.foot{
+  margin-top:22px; padding:0 8px; color:var(--muted); font-size:11.5px;
+  display:flex; gap:18px; flex-wrap:wrap;
+}
+@media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important} }
+</style>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="wordmark">C/PROJECT</div>
+    <div class="addr">560 18th St, San Francisco</div>
+  </div>
+
+  <div class="mast">
+    <div>
+      <div class="eyebrow">Station sign-up &middot; 5 stations &middot; whole-day bookings</div>
+      <h1>Station Board</h1>
+      <p class="sub">Pick a date, type your name, claim an open station. One name per station per day &mdash; the floor is yours open to close.</p>
+    </div>
+    <div class="status">
+      <span class="pill" id="connPill"><span class="dot"></span><span id="connText">Connecting</span></span>
+    </div>
+  </div>
+
+  <div class="notice hide" id="notice"></div>
+
+  <div class="bar">
+    <div class="nav">
+      <button class="icon" id="prevBtn" type="button" aria-label="Previous month">&#8592;</button>
+      <button class="icon" id="nextBtn" type="button" aria-label="Next month">&#8594;</button>
+    </div>
+    <span class="month num" id="monthLabel">&mdash;</span>
+    <button class="btn" id="todayBtn" type="button">Today</button>
+    <button class="btn" id="rangeBtn" type="button" aria-pressed="false">Select multiple days</button>
+    <button class="btn" id="mgrBtn" type="button" aria-pressed="false">Studio tools</button>
+    <span class="spacer"></span>
+  </div>
+
+  <form class="mgrbox hide" id="mgrBox" autocomplete="off">
+    <label class="eyebrow" for="mgrCode">Studio code</label>
+    <input id="mgrCode" type="password" autocomplete="off" maxlength="24" aria-describedby="mgrMsg">
+    <button class="btn primary" id="mgrGo" type="submit">Unlock</button>
+    <span class="mgrmsg" id="mgrMsg">Unlocks Hold and Mark studio closed on this device.</span>
+  </form>
+
+  <div class="cols">
+    <section class="card cal" aria-label="Month calendar">
+      <div class="dow eyebrow" aria-hidden="true">
+        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+      </div>
+      <div class="grid" id="grid" role="group" aria-label="Days of the month"></div>
+    </section>
+
+    <aside class="card panel" aria-live="polite">
+      <div class="phead" id="phead"></div>
+      <div class="evtbox" id="evtWrap"></div>
+      <form class="evtform hide" id="evtForm" autocomplete="off">
+        <label class="eyebrow" for="evtTitle">Add an event</label>
+        <div class="evtrow">
+          <input id="evtTitle" type="text" placeholder="What's happening?" maxlength="60" spellcheck="false">
+          <input id="evtTime" type="time" value="19:00" aria-label="Start time">
+          <button class="btn primary" id="evtGo" type="submit">Add</button>
+        </div>
+        <span class="evthint" id="evtHint"></span>
+      </form>
+      <div class="bookas" id="bookAs">
+        <label class="eyebrow" for="artistName">Booking as</label>
+        <div class="namerow">
+          <input id="artistName" type="text" placeholder="Type any name" autocomplete="off" maxlength="48" spellcheck="false">
+        </div>
+      </div>
+      <div id="slotsWrap"></div>
+      <div id="pfoot"></div>
+    </aside>
+  </div>
+
+  <div class="lower">
+    <section class="card box">
+      <div class="eyebrow">This month</div>
+      <h3 id="tallyTitle">Days booked</h3>
+      <ul class="tlist" id="tallyList"></ul>
+    </section>
+    <section class="card box">
+      <div class="eyebrow">Studio diary</div>
+      <h3>Events</h3>
+      <ul class="elist" id="eventList"></ul>
+    </section>
+    <section class="card box">
+      <div class="eyebrow">Key</div>
+      <h3>Reading the grid</h3>
+      <div class="legend">
+        <div><span class="sw" style="background:#1C1C1A"></span> Station booked</div>
+        <div><span class="sw" style="background:#9A6B12"></span> On hold &mdash; ask the studio</div>
+        <div><span class="sw" style="box-shadow:inset 0 0 0 1.25px #D6D6D0"></span> Station open</div>
+        <div><span class="sw" style="background:repeating-linear-gradient(135deg,#F5F5F3,#F5F5F3 3px,#EAEAE6 3px,#EAEAE6 6px)"></span> Studio closed</div>
+        <div><span class="sw" style="background:#5B6454; border-radius:50%; width:7px; height:7px; margin:0 2px"></span> Event that day</div>
+      </div>
+    </section>
+  </div>
+
+  <div class="foot">
+    <span>C/PROJECT &middot; 560 18th St, San Francisco</span>
+    <span>Five squares under each date = five stations.</span>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ==========================================================
+     STUDIO CODE — change the line below to your own.
+     Anyone who types it gets Hold and Mark studio closed on
+     their own device. It is stored in this file in plain text,
+     so treat it as a guard against stray clicks, not a lock.
+     ========================================================== */
+  var STUDIO_CODE = "5618";
+
+  var STATIONS = [1,2,3,4,5];
+  var HOLD = "—HOLD—";
+  var LS_KEY = "cproject.studioTools";
+  var MON = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var DAY = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+  var state = {
+    view: new Date(),
+    sel: null,          // single-day mode: iso date
+    mode: "day",        // "day" | "range"
+    rangeA: null,
+    rangeB: null,
+    hover: null,
+    bookings: {},
+    closed: {},
+    events: {},
+    name: "",
+    db: null,
+    isManager: false,   // studio code entered (or owner of the hosted page)
+    readOnly: false,    // the server refused our writes
+    unsub: null,
+    localOnly: false
+  };
+
+  /* ---------- dates ---------- */
+  function iso(d){
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+  function parseIso(s){ var p = s.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function shortDate(s){ var d = parseIso(s); return MON[d.getMonth()].slice(0,3) + " " + d.getDate(); }
+  function longDate(s){ var d = parseIso(s); return DAY[d.getDay()] + ", " + MON[d.getMonth()].slice(0,3) + " " + d.getDate(); }
+  function addDays(s, n){ var d = parseIso(s); d.setDate(d.getDate()+n); return iso(d); }
+
+  /* Dates currently being acted on — one day, or every day in the range. */
+  function activeDates(){
+    if (state.mode === "day") return state.sel ? [state.sel] : [];
+    var a = state.rangeA, b = state.rangeB || state.hover || state.rangeA;
+    if (!a) return [];
+    if (b < a) { var t = a; a = b; b = t; }
+    var out = [], cur = a, guard = 0;
+    while (cur <= b && guard++ < 400){ out.push(cur); cur = addDays(cur, 1); }
+    return out;
+  }
+  function committedDates(){
+    if (state.mode === "day") return state.sel ? [state.sel] : [];
+    if (!state.rangeA || !state.rangeB) return state.rangeA ? [state.rangeA] : [];
+    return activeDates();
+  }
+
+  function fmtTime(t){
+    if (!t) return "";
+    var p = String(t).split(":");
+    var h = parseInt(p[0],10), m = p[1] || "00";
+    if (isNaN(h)) return t;
+    var ap = h < 12 ? "AM" : "PM";
+    var h12 = h % 12; if (h12 === 0) h12 = 12;
+    return h12 + ":" + m + " " + ap;
+  }
+
+  function eventsOn(date){
+    var out = [];
+    Object.keys(state.events).forEach(function(id){
+      var e = state.events[id];
+      if (e.date === date) out.push({ id:id, date:e.date, time:e.time, title:e.title });
+    });
+    out.sort(function(a,b){ return String(a.time).localeCompare(String(b.time)); });
+    return out;
+  }
+
+  function el(tag, cls, txt){
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (txt != null) n.textContent = txt;
+    return n;
+  }
+
+  function setConn(kind, text){
+    document.getElementById("connPill").className = "pill" + (kind ? " " + kind : "");
+    document.getElementById("connText").textContent = text;
+  }
+  function notice(html){
+    var n = document.getElementById("notice");
+    if (!html){ n.className = "notice hide"; n.textContent = ""; return; }
+    n.className = "notice";
+    n.innerHTML = html;
+  }
+
+  function monthBounds(d){
+    return [iso(new Date(d.getFullYear(), d.getMonth(), 1)), iso(new Date(d.getFullYear(), d.getMonth()+1, 0))];
+  }
+  function bookingAt(date, n){ return state.bookings[date + "|" + n]; }
+  function bookedCount(date){
+    var c = 0;
+    STATIONS.forEach(function(n){ if (bookingAt(date,n)) c++; });
+    return c;
+  }
+
+  /* ---------- calendar ---------- */
+  function renderCalendar(){
+    var view = state.view;
+    document.getElementById("monthLabel").textContent = MON[view.getMonth()] + " " + view.getFullYear();
+
+    var grid = document.getElementById("grid");
+    grid.textContent = "";
+    var lead = (new Date(view.getFullYear(), view.getMonth(), 1).getDay() + 6) % 7;
+    var days = new Date(view.getFullYear(), view.getMonth()+1, 0).getDate();
+    var todayIso = iso(new Date());
+
+    for (var i=0;i<lead;i++) grid.appendChild(el("div","day blank"));
+
+    for (var d=1; d<=days; d++){
+      var dt = new Date(view.getFullYear(), view.getMonth(), d);
+      var key = iso(dt);
+      var cls = "day";
+      if (dt.getDay() === 0 || dt.getDay() === 6) cls += " wknd";
+      if (key === todayIso) cls += " today";
+      if (state.closed[key]) cls += " closed";
+
+      var count = bookedCount(key);
+      if (count === STATIONS.length) cls += " full";
+
+      var btn = el("button", cls);
+      btn.type = "button";
+      btn.setAttribute("data-date", key);
+      btn.setAttribute("aria-label", longDate(key) + ", " + count + " of 5 stations booked");
+      btn.appendChild(el("span","dnum num", String(d)));
+
+      var pips = el("span","pips");
+      STATIONS.forEach(function(n){
+        var b = bookingAt(key, n);
+        var pc = "pip";
+        if (b && b.artist === HOLD) pc += " hold";
+        else if (b) pc += " on";
+        pips.appendChild(el("i", pc));
+      });
+      btn.appendChild(pips);
+      btn.appendChild(el("span","cnt num", state.closed[key] ? "closed" : count + "/5"));
+      if (eventsOn(key).length) btn.appendChild(el("i","evt"));
+
+      grid.appendChild(btn);
+    }
+    paintSelection();
+  }
+
+  /* Selection is painted by toggling classes on the cells that already exist.
+     Rebuilding the grid mid-hover destroys the node under the pointer, and the
+     browser then never fires the click. */
+  function paintSelection(){
+    var span = activeDates();
+    var inSpan = {};
+    span.forEach(function(d){ inSpan[d] = true; });
+    var first = span.length ? span[0] : null;
+    var last = span.length ? span[span.length-1] : null;
+
+    var cells = document.querySelectorAll("#grid .day[data-date]");
+    for (var i=0;i<cells.length;i++){
+      var c = cells[i];
+      var k = c.getAttribute("data-date");
+      c.classList.remove("sel","inrange","edge");
+      if (state.mode === "day"){
+        if (k === state.sel) c.classList.add("sel");
+      } else if (inSpan[k]){
+        c.classList.add((k === first || k === last) ? "edge" : "inrange");
+      }
+    }
+  }
+
+  function pickDate(k, shift){
+    if (state.mode === "day"){
+      if (shift && state.sel && state.sel !== k){
+        /* shift-click extends from the selected day into a range */
+        setMode("range");
+        state.rangeA = state.sel < k ? state.sel : k;
+        state.rangeB = state.sel < k ? k : state.sel;
+      } else {
+        state.sel = k;
+      }
+    } else if (!state.rangeA || state.rangeB){
+      state.rangeA = k; state.rangeB = null; state.hover = null;
+    } else {
+      if (k < state.rangeA){ state.rangeB = state.rangeA; state.rangeA = k; }
+      else state.rangeB = k;
+      state.hover = null;
+    }
+    renderAll();
+  }
+
+  function setMode(m){
+    state.mode = m;
+    var btn = document.getElementById("rangeBtn");
+    btn.setAttribute("aria-pressed", m === "range" ? "true" : "false");
+    btn.textContent = m === "range" ? "One day at a time" : "Select multiple days";
+  }
+
+  /* ---------- panel ---------- */
+  function renderPanel(){
+    var head = document.getElementById("phead");
+    var wrap = document.getElementById("slotsWrap");
+    var foot = document.getElementById("pfoot");
+    head.textContent = ""; wrap.textContent = ""; foot.textContent = "";
+
+    var dates = committedDates();
+    var multi = state.mode === "range";
+
+    /* --- heading --- */
+    if (!dates.length){
+      head.appendChild(el("div","eyebrow","Nothing selected"));
+      head.appendChild(el("h2",null, multi ? "Pick a start date" : "Pick a date"));
+      head.appendChild(el("span","tally", multi
+        ? "Click the first day, then the last. Everything between is included."
+        : "Click any date in the grid."));
+      return;
+    }
+
+    if (multi && (!state.rangeB || dates.length > 1)){
+      var span = activeDates();
+      var label = span.length > 1
+        ? shortDate(span[0]) + " – " + shortDate(span[span.length-1])
+        : shortDate(span[0]);
+      head.appendChild(el("div","eyebrow", state.rangeB ? span.length + (span.length === 1 ? " day" : " days") : "Now click the last day"));
+      head.appendChild(el("h2",null, label));
+      if (state.rangeB){
+        var openTotal = 0;
+        span.forEach(function(d){ if (!state.closed[d]) openTotal += (5 - bookedCount(d)); });
+        head.appendChild(el("span","tally", openTotal + " open station-days across this stretch"));
+      } else {
+        head.appendChild(el("span","tally","Hover the grid to preview, click to set the end."));
+      }
+    } else {
+      var date = dates[0];
+      var isClosed = !!state.closed[date];
+      var count = bookedCount(date);
+      head.appendChild(el("div","eyebrow", isClosed ? "Studio closed" : (count === 5 ? "Fully booked" : (5 - count) + " open")));
+      head.appendChild(el("h2",null, longDate(date)));
+      head.appendChild(el("span","tally", count + " of 5 stations booked"));
+    }
+
+    /* --- waiting for the end of a range --- */
+    if (multi && state.rangeA && !state.rangeB){
+      wrap.appendChild(el("div","hint","Pick the last day of the stretch to see which stations are free the whole way through."));
+      var clr = el("div","pfoot");
+      var c1 = el("button","btn quiet","Clear");
+      c1.type = "button";
+      c1.addEventListener("click", function(){ state.rangeA = null; state.rangeB = null; state.hover = null; renderCalendar(); renderPanel(); });
+      clr.appendChild(c1);
+      foot.appendChild(clr);
+      return;
+    }
+
+    var list = el("ul","slots");
+
+    if (dates.length === 1){
+      var date1 = dates[0];
+      var closed1 = !!state.closed[date1];
+      STATIONS.forEach(function(n){
+        var b = bookingAt(date1, n);
+        var held = b && b.artist === HOLD;
+        var li = el("li","slot" + (held ? " held" : (b ? " taken" : "")));
+        li.appendChild(el("div","stn num", String(n)));
+
+        var who = el("div","who");
+        if (held){
+          who.appendChild(el("div","name","On hold"));
+          who.appendChild(el("div","note","Ask the studio before taking this one."));
+        } else if (b){
+          var nm = el("div","name", b.artist);
+          if (b.example) nm.appendChild(el("span","tag","example"));
+          who.appendChild(nm);
+          who.appendChild(el("div","note","Station " + n + " · whole day"));
+        } else {
+          who.appendChild(el("div","open", closed1 ? "Studio closed" : "Open"));
+        }
+        li.appendChild(who);
+
+        var acts = el("div","acts");
+        if (b){
+          if (!(held && !state.isManager)){
+            var rel = el("button","btn sm danger", held ? "Release" : "Give up");
+            rel.type = "button";
+            rel.addEventListener("click", function(){
+              armConfirm(rel, "Confirm", function(){ release([date1], n); });
+            });
+            acts.appendChild(rel);
+          }
+        } else if (!closed1 && !state.readOnly){
+          var cl = el("button","btn sm primary","Claim");
+          cl.type = "button";
+          cl.addEventListener("click", function(){ claim([date1], n); });
+          acts.appendChild(cl);
+          if (state.isManager){
+            var h = el("button","btn sm quiet","Hold");
+            h.type = "button";
+            h.addEventListener("click", function(){ write([date1], n, HOLD); });
+            acts.appendChild(h);
+          }
+        }
+        li.appendChild(acts);
+        list.appendChild(li);
+      });
+    } else {
+      /* multi-day: availability per station across the whole stretch */
+      STATIONS.forEach(function(n){
+        var free = [], taken = [];
+        dates.forEach(function(d){
+          if (state.closed[d]) return;
+          if (bookingAt(d, n)) taken.push(d); else free.push(d);
+        });
+        var all = free.length && !taken.length;
+        var li = el("li","slot" + (taken.length && !free.length ? " taken" : ""));
+        li.appendChild(el("div","stn num", String(n)));
+
+        var who = el("div","who");
+        who.appendChild(el("div","name","Station " + n));
+        who.appendChild(el("div","note", free.length === 0
+          ? "Taken every day in this stretch"
+          : free.length + " of " + dates.length + " days open" + (taken.length ? " · " + taken.length + " already taken" : "")));
+        li.appendChild(who);
+
+        var acts = el("div","acts");
+        if (free.length && !state.readOnly){
+          var bk = el("button","btn sm primary", all ? "Book all" : "Book " + free.length);
+          bk.type = "button";
+          bk.addEventListener("click", function(){ claim(free, n); });
+          acts.appendChild(bk);
+        }
+        if (taken.length && state.isManager){
+          var rl = el("button","btn sm danger","Clear " + taken.length);
+          rl.type = "button";
+          rl.title = "Frees the station on " + taken.length + " day" + (taken.length === 1 ? "" : "s") + ", whoever is on it";
+          rl.addEventListener("click", function(){
+            armConfirm(rl, "Clear " + taken.length + "?", function(){ release(taken, n); });
+          });
+          acts.appendChild(rl);
+        }
+        li.appendChild(acts);
+        list.appendChild(li);
+      });
+    }
+    wrap.appendChild(list);
+
+    /* --- footer actions --- */
+    var f = el("div","pfoot");
+    if (state.isManager){
+      var anyOpen = dates.some(function(d){ return !state.closed[d]; });
+      var t = el("button","btn", anyOpen
+        ? (dates.length > 1 ? "Mark all " + dates.length + " days closed" : "Mark studio closed")
+        : (dates.length > 1 ? "Reopen these days" : "Reopen this day"));
+      t.type = "button";
+      t.addEventListener("click", function(){ setClosed(dates, anyOpen); });
+      f.appendChild(t);
+    }
+    if (dates.length > 1 || state.mode === "range"){
+      var c2 = el("button","btn quiet","Clear selection");
+      c2.type = "button";
+      c2.addEventListener("click", function(){ state.rangeA = null; state.rangeB = null; state.hover = null; renderCalendar(); renderPanel(); });
+      f.appendChild(c2);
+    }
+    if (f.childNodes.length) foot.appendChild(f);
+  }
+
+  /* ---------- monthly tally ---------- */
+  function renderTally(){
+    var b = monthBounds(state.view);
+    var counts = {};
+    Object.keys(state.bookings).forEach(function(k){
+      var date = k.split("|")[0];
+      if (date < b[0] || date > b[1]) return;
+      var a = state.bookings[k].artist;
+      if (!a || a === HOLD) return;
+      counts[a] = (counts[a] || 0) + 1;
+    });
+    var names = Object.keys(counts).sort(function(x,y){ return counts[y]-counts[x] || x.localeCompare(y); });
+    document.getElementById("tallyTitle").textContent = "Days booked — " + MON[state.view.getMonth()].slice(0,3);
+    var ul = document.getElementById("tallyList");
+    ul.textContent = "";
+    if (!names.length){
+      var li0 = el("li"); li0.appendChild(el("span","empty","Nothing booked this month yet."));
+      ul.appendChild(li0); return;
+    }
+    names.forEach(function(n){
+      var li = el("li");
+      li.appendChild(el("span","nm", n));
+      var bars = el("span","bars");
+      for (var i=0;i<Math.min(counts[n],12);i++) bars.appendChild(el("i"));
+      li.appendChild(bars);
+      li.appendChild(el("span","n", String(counts[n])));
+      ul.appendChild(li);
+    });
+  }
+
+  /* Events: the day panel shows the selected dates', the lower card shows what's coming. */
+  function renderEvents(){
+    var dates = committedDates();
+    var wrap = document.getElementById("evtWrap");
+    wrap.textContent = "";
+
+    var rows = [];
+    dates.forEach(function(d){ eventsOn(d).forEach(function(e){ rows.push(e); }); });
+
+    if (rows.length){
+      var ul = el("ul","elist");
+      rows.forEach(function(e){
+        var li = el("li");
+        li.appendChild(el("span","evtwhen", fmtTime(e.time)));
+        if (dates.length > 1) li.appendChild(el("span","evtday", shortDate(e.date)));
+        li.appendChild(el("span","evtname", e.title));
+        if (state.isManager){
+          var x = el("button","evtdrop","\u00d7");
+          x.type = "button";
+          x.setAttribute("aria-label","Remove " + e.title);
+          x.addEventListener("click", function(){
+            armConfirm(x, "\u00d7?", function(){ removeEvent(e.id); });
+          });
+          li.appendChild(x);
+        }
+        ul.appendChild(li);
+      });
+      wrap.appendChild(ul);
+    }
+
+    /* manager form, aimed at the first selected day */
+    var form = document.getElementById("evtForm");
+    var hint = document.getElementById("evtHint");
+    if (state.isManager && dates.length){
+      form.className = "evtform";
+      hint.textContent = dates.length > 1
+        ? "Goes on " + longDate(dates[0]) + ", the first day selected."
+        : "Everyone with the link sees it on " + longDate(dates[0]) + ".";
+    } else {
+      form.className = "evtform hide";
+      hint.textContent = "";
+    }
+
+    /* upcoming, today onward */
+    var today = iso(new Date());
+    var all = Object.keys(state.events).map(function(id){
+      var e = state.events[id];
+      return { id:id, date:e.date, time:e.time, title:e.title };
+    }).filter(function(e){ return e.date && e.date >= today; });
+    all.sort(function(a,b){ return (a.date + a.time).localeCompare(b.date + b.time); });
+
+    var list = document.getElementById("eventList");
+    list.textContent = "";
+    if (!all.length){
+      var li0 = el("li");
+      li0.appendChild(el("span","empty","Nothing scheduled yet."));
+      list.appendChild(li0);
+      return;
+    }
+    all.slice(0,7).forEach(function(e){
+      var li = el("li");
+      li.appendChild(el("span","evtwhen", fmtTime(e.time)));
+      li.appendChild(el("span","evtday", shortDate(e.date)));
+      li.appendChild(el("span","evtname", e.title));
+      if (state.isManager){
+        var x = el("button","evtdrop","\u00d7");
+        x.type = "button";
+        x.setAttribute("aria-label","Remove " + e.title);
+        x.addEventListener("click", function(){
+          armConfirm(x, "\u00d7?", function(){ removeEvent(e.id); });
+        });
+        li.appendChild(x);
+      }
+      list.appendChild(li);
+    });
+  }
+
+  function renderAll(){ renderCalendar(); renderPanel(); renderTally(); renderEvents(); }
+
+  /* ---------- writes ---------- */
+  function docsOf(snap){
+    if (!snap) return [];
+    var arr = Array.isArray(snap) ? snap
+      : Array.isArray(snap.docs) ? snap.docs
+      : Array.isArray(snap.documents) ? snap.documents
+      : Array.isArray(snap.data) ? snap.data
+      : Array.isArray(snap.items) ? snap.items : [];
+    return arr.map(function(d){
+      if (!d) return null;
+      var data = typeof d.data === "function" ? d.data() : (d.data && typeof d.data === "object" ? d.data : d);
+      var out = {};
+      for (var k in data) if (Object.prototype.hasOwnProperty.call(data,k)) out[k] = data[k];
+      out.__id = d.id || d.doc_id || d.docId || "";
+      return out;
+    }).filter(Boolean);
+  }
+
+  function claim(dates, n){
+    var inp = document.getElementById("artistName");
+    var name = (inp.value || "").trim();
+    if (!name){
+      inp.classList.add("warn");
+      inp.placeholder = "Type a name first";
+      inp.focus();
+      return;
+    }
+    inp.classList.remove("warn");
+    state.name = name;
+    write(dates, n, name);
+  }
+
+  function write(dates, n, name){
+    dates.forEach(function(d){
+      state.bookings[d + "|" + n] = { artist: name };
+    });
+    renderAll();
+    if (dates.length > 1) notice("<strong>Booked.</strong> Station " + n + " is held for " + name + " on " + dates.length + " days.");
+    else notice("");
+    if (!state.db) return;
+    dates.forEach(function(d){
+      state.db.doc("bookings/" + d + "_s" + n).set({ date:d, station:n, artist:name, ts:Date.now() })
+        .catch(function(e){ writeFailed(e, "That booking didn't save."); });
+    });
+  }
+
+  function release(dates, n){
+    dates.forEach(function(d){ delete state.bookings[d + "|" + n]; });
+    renderAll();
+    if (!state.db) return;
+    dates.forEach(function(d){
+      state.db.doc("bookings/" + d + "_s" + n).delete()
+        .catch(function(e){ writeFailed(e, "Couldn't free that station."); });
+    });
+  }
+
+  function setClosed(dates, val){
+    dates.forEach(function(d){ if (val) state.closed[d] = true; else delete state.closed[d]; });
+    renderAll();
+    if (!state.db) return;
+    dates.forEach(function(d){
+      var doc = state.db.doc("closures/" + d);
+      var p = val ? doc.set({ date:d, closed:true, ts:Date.now() }) : doc.delete();
+      p.catch(function(e){ writeFailed(e, "Couldn't change that day."); });
+    });
+  }
+
+  function addEvent(date, time, title){
+    var id = date + "_" + String(time).replace(":","");
+    state.events[id] = { date:date, time:time, title:title };
+    renderAll();
+    if (!state.db) return;
+    state.db.doc("events/" + id).set({ date:date, time:time, title:title, ts:Date.now() })
+      .catch(function(e){ writeFailed(e, "That event didn't save."); });
+  }
+
+  function removeEvent(id){
+    delete state.events[id];
+    renderAll();
+    if (!state.db) return;
+    state.db.doc("events/" + id).delete()
+      .catch(function(e){ writeFailed(e, "Couldn't remove that event."); });
+  }
+
+  function writeFailed(err, msg){
+    var code = (err && (err.code || err.name)) || "";
+    if (code === "not_granted" || code === "not_writer" || code === "permission_denied"){
+      state.readOnly = true;
+      notice("<strong>View only.</strong> You can read the board but not change it — ask the studio for edit access on the link.");
+    } else {
+      notice("<strong>" + msg + "</strong> Reload to see the current board.");
+    }
+    renderAll();
+  }
+
+  /* Two-step confirm: the button itself asks. No modal dialogs — those get
+     blocked when the page is embedded, and the click would vanish silently. */
+  function armConfirm(btn, label, go){
+    if (btn.getAttribute("data-armed") === "1"){ go(); return; }
+    var original = btn.textContent;
+    btn.setAttribute("data-armed","1");
+    btn.textContent = label;
+    btn.classList.add("armed");
+    setTimeout(function(){
+      if (!btn.isConnected) return;
+      btn.setAttribute("data-armed","");
+      btn.textContent = original;
+      btn.classList.remove("armed");
+    }, 4000);
+  }
+
+  /* ---------- studio tools lock ---------- */
+  function setManager(on, remember){
+    state.isManager = !!on;
+    var btn = document.getElementById("mgrBtn");
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.textContent = on ? "Studio tools · on" : "Studio tools";
+    document.getElementById("mgrBox").className = "mgrbox hide";
+    if (remember){
+      try {
+        if (on) window.localStorage.setItem(LS_KEY, "1");
+        else window.localStorage.removeItem(LS_KEY);
+      } catch(e){}
+    }
+    renderAll();
+  }
+
+  document.getElementById("mgrBtn").addEventListener("click", function(){
+    if (state.isManager){ setManager(false, true); return; }
+    var box = document.getElementById("mgrBox");
+    var open = box.className.indexOf("hide") >= 0;
+    box.className = open ? "mgrbox" : "mgrbox hide";
+    if (open) document.getElementById("mgrCode").focus();
+  });
+
+  document.getElementById("mgrBox").addEventListener("submit", function(e){
+    e.preventDefault();
+    var inp = document.getElementById("mgrCode");
+    var msg = document.getElementById("mgrMsg");
+    if (inp.value.trim() === STUDIO_CODE){
+      inp.value = "";
+      inp.classList.remove("warn");
+      msg.className = "mgrmsg";
+      msg.textContent = "Unlocks Hold and Mark studio closed on this device.";
+      setManager(true, true);
+    } else {
+      inp.classList.add("warn");
+      msg.className = "mgrmsg bad";
+      msg.textContent = "That code doesn't match.";
+      inp.select();
+    }
+  });
+  document.getElementById("mgrCode").addEventListener("input", function(){
+    this.classList.remove("warn");
+  });
+
+  /* ---------- controls ---------- */
+  document.getElementById("artistName").addEventListener("input", function(){
+    state.name = this.value;
+    this.classList.remove("warn");
+  });
+  document.getElementById("evtForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var dates = committedDates();
+    if (!dates.length) return;
+    var t = document.getElementById("evtTitle");
+    var tm = document.getElementById("evtTime");
+    var title = t.value.trim();
+    if (!title){ t.classList.add("warn"); t.focus(); return; }
+    if (!tm.value){ tm.classList.add("warn"); tm.focus(); return; }
+    t.classList.remove("warn"); tm.classList.remove("warn");
+    addEvent(dates[0], tm.value, title);
+    t.value = "";
+    t.focus();
+  });
+  document.getElementById("evtTitle").addEventListener("input", function(){ this.classList.remove("warn"); });
+  document.getElementById("evtTime").addEventListener("input", function(){ this.classList.remove("warn"); });
+
+  document.getElementById("prevBtn").addEventListener("click", function(){
+    state.view = new Date(state.view.getFullYear(), state.view.getMonth()-1, 1);
+    subscribe(); renderAll();
+  });
+  document.getElementById("nextBtn").addEventListener("click", function(){
+    state.view = new Date(state.view.getFullYear(), state.view.getMonth()+1, 1);
+    subscribe(); renderAll();
+  });
+  document.getElementById("todayBtn").addEventListener("click", function(){
+    var t = new Date();
+    state.view = new Date(t.getFullYear(), t.getMonth(), 1);
+    if (state.mode === "day") state.sel = iso(t);
+    subscribe(); renderAll();
+  });
+  document.getElementById("rangeBtn").addEventListener("click", function(){
+    if (state.mode === "day"){
+      setMode("range");
+      /* Start empty so the viewer's first click opens the range. */
+      state.rangeA = null; state.rangeB = null; state.hover = null;
+    } else {
+      setMode("day");
+      state.sel = state.rangeA || state.sel || iso(new Date());
+      state.rangeA = null; state.rangeB = null; state.hover = null;
+    }
+    notice("");
+    renderAll();
+  });
+
+  /* One delegated listener each — cells come and go, the grid does not. */
+  var gridEl = document.getElementById("grid");
+  gridEl.addEventListener("click", function(e){
+    var cell = e.target.closest ? e.target.closest(".day[data-date]") : null;
+    if (!cell) return;
+    pickDate(cell.getAttribute("data-date"), e.shiftKey);
+  });
+  gridEl.addEventListener("mouseover", function(e){
+    if (state.mode !== "range" || !state.rangeA || state.rangeB) return;
+    var cell = e.target.closest ? e.target.closest(".day[data-date]") : null;
+    if (!cell) return;
+    var k = cell.getAttribute("data-date");
+    if (k === state.hover) return;
+    state.hover = k;
+    paintSelection();
+    renderPanel();
+  });
+  gridEl.addEventListener("mouseleave", function(){
+    if (state.mode === "range" && state.rangeA && !state.rangeB && state.hover){
+      state.hover = null; paintSelection(); renderPanel();
+    }
+  });
+
+  /* ---------- boot ---------- */
+  state.sel = iso(new Date());
+  try { if (window.localStorage.getItem(LS_KEY) === "1") state.isManager = true; } catch(e){}
+  setManager(state.isManager, false);
+  setConn("", "Connecting…");
+
+  function subscribe(){
+    if (!state.db) return;
+    if (state.unsub){ try { state.unsub(); } catch(e){} state.unsub = null; }
+    var col = state.db.collection("bookings");
+    var q = col;
+    try {
+      var b = monthBounds(state.view);
+      q = col.where("date", ">=", addDays(b[0], -40)).where("date", "<=", addDays(b[1], 40));
+    } catch(e){ q = col; }
+
+    function apply(snap){
+      var next = {};
+      docsOf(snap).forEach(function(d){
+        if (!d.date || !d.station || !d.artist) return;
+        next[d.date + "|" + d.station] = { artist:d.artist, example:!!d.example };
+      });
+      state.bookings = next;
+      renderAll();
+    }
+    if (typeof q.onSnapshot === "function"){
+      try { state.unsub = q.onSnapshot(apply, function(){ setConn("offline","Live updates off"); }); return; }
+      catch(e){}
+    }
+    if (typeof q.get === "function") q.get().then(apply).catch(function(){});
+  }
+
+  function loadStatics(){
+    var cc = state.db.collection("closures");
+    function applyClosed(snap){
+      var next = {};
+      docsOf(snap).forEach(function(d){ if (d.date && d.closed) next[d.date] = true; });
+      state.closed = next;
+      renderAll();
+    }
+    if (typeof cc.onSnapshot === "function"){
+      try { cc.onSnapshot(applyClosed, function(){}); return; } catch(e){}
+    }
+    if (typeof cc.get === "function") cc.get().then(applyClosed).catch(function(){});
+
+    var ec = state.db.collection("events");
+    function applyEvents(snap){
+      var next = {};
+      docsOf(snap).forEach(function(d){
+        if (!d.date || !d.title) return;
+        next[d.__id || (d.date + "_" + String(d.time || "").replace(":",""))] =
+          { date:d.date, time:d.time || "00:00", title:d.title };
+      });
+      state.events = next;
+      renderAll();
+    }
+    if (typeof ec.onSnapshot === "function"){
+      try { ec.onSnapshot(applyEvents, function(){}); return; } catch(e){}
+    }
+    if (typeof ec.get === "function") ec.get().then(applyEvents).catch(function(){});
+  }
+
+  function start(){
+    if (!window.claude || typeof window.claude.use !== "function"){ goLocal(); return; }
+    window.claude.use("user").then(function(u){
+      if (!u) return;
+      /* Whoever can edit the hosted page is the studio — no code needed. */
+      try { if (typeof u.canEdit === "function" && u.canEdit() === true) setManager(true, false); } catch(e){}
+      try {
+        if (typeof u.can === "function" && u.can("data.write") === false){
+          state.readOnly = true;
+          notice("<strong>View only.</strong> You can read the board but not book a station — ask the studio for edit access.");
+        }
+      } catch(e){}
+      renderAll();
+    }).catch(function(){});
+    window.claude.use("db").then(function(db){
+      if (!db){ goLocal(); return; }
+      state.db = db;
+      setConn("live","Live — saved for everyone");
+      loadStatics();
+      subscribe();
+    }).catch(function(){ goLocal(); });
+  }
+
+  function goLocal(){
+    if (state.localOnly || state.db) return;
+    state.localOnly = true;
+    setConn("offline","Preview only — not saving");
+    notice("<strong>Preview mode.</strong> This copy isn't connected to a saved board, so anything booked here disappears on reload.");
+    state.bookings = {};
+    state.closed = {};
+    state.events = {};
+    renderAll();
+  }
+
+  start();
+  setTimeout(goLocal, 11000);
+})();
+</script>
