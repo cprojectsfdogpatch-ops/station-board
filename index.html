@@ -103,6 +103,12 @@ input,select{font:inherit; color:var(--ink)}
 .month{
   font-size:19px; font-weight:600; letter-spacing:-.04em; min-width:9.5ch; padding:0 6px;
 }
+.barhint{margin-left:6px; font-size:12px; color:var(--muted)}
+.selctl .btn{background:transparent; box-shadow:inset 0 0 0 1px var(--line-2)}
+.selctl .btn:hover{background:var(--tint)}
+@media (max-width:768px){ .barhint{display:none} }
+.grid{user-select:none; -webkit-user-select:none}
+.selctl{display:flex; gap:7px; flex-wrap:wrap; margin-top:13px}
 .nav{display:flex; gap:5px}
 .icon{
   width:34px; height:34px; display:grid; place-items:center; background:var(--tint);
@@ -199,15 +205,6 @@ input,select{font:inherit; color:var(--ink)}
   font-size:26px; font-weight:600; margin:11px 0 0; letter-spacing:-.04em; line-height:1.1;
 }
 .phead .tally{display:block; margin-top:7px; font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums}
-.bookas{padding:4px 20px 18px}
-.bookas label{display:block; margin-bottom:7px}
-.namerow{display:flex; gap:6px}
-.namerow input{
-  flex:1 1 auto; min-width:0; font-size:13.5px; padding:9px 15px;
-  border:0; border-radius:var(--pill); background:var(--tint);
-}
-.namerow input::placeholder{color:var(--muted)}
-.namerow input.warn{background:var(--alert-bg); box-shadow:inset 0 0 0 1px #E0BDBA}
 .slots{list-style:none; margin:0; padding:0 12px}
 .slot{
   display:flex; align-items:center; gap:11px; padding:11px 8px;
@@ -265,6 +262,70 @@ input,select{font:inherit; color:var(--ink)}
 }
 .evtrow input.warn{background:var(--alert-bg); box-shadow:inset 0 0 0 1px #E0BDBA}
 .evthint{display:block; margin-top:8px; font-size:12px; color:var(--muted)}
+
+/* ---------- claim dialog ---------- */
+.scrim{
+  position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center;
+  padding:16px; background:rgba(28,28,26,.45); overflow-y:auto;
+}
+.scrim.hide{display:none}
+.modal{
+  width:100%; max-width:400px; background:var(--paper); border-radius:var(--r);
+  padding:24px; box-shadow:0 24px 60px -20px rgba(28,28,26,.45); margin:auto;
+}
+.modal h2{font-size:24px; font-weight:600; letter-spacing:-.04em; margin:9px 0 0}
+.mdates{
+  margin:10px 0 18px; font-size:13px; color:var(--accent-ink); background:var(--accent);
+  display:inline-block; padding:5px 12px; border-radius:var(--pill); font-weight:500;
+}
+.mfield{margin-bottom:13px}
+.mfield label{display:block; margin-bottom:6px}
+.mfield input{
+  width:100%; font-size:14px; padding:11px 15px; border:0;
+  border-radius:var(--pill); background:var(--tint); color:var(--ink);
+}
+.mfield input.warn{background:var(--alert-bg); box-shadow:inset 0 0 0 1px #E0BDBA}
+.merr{margin:0 0 12px; font-size:12.5px; color:var(--alert); font-weight:500}
+.merr.hide{display:none}
+.mbtns{display:flex; gap:8px; justify-content:flex-end; margin-top:18px}
+.mbtns .btn{min-height:42px; padding:10px 20px}
+@media (max-width:560px){
+  .modal{padding:20px}
+  .modal h2{font-size:21px}
+  .mfield input{font-size:16px}
+  .mbtns{flex-direction:column-reverse}
+  .mbtns .btn{width:100%}
+}
+
+/* ---------- booking confirmation ---------- */
+.toast{
+  position:fixed; z-index:60; left:50%; transform:translateX(-50%);
+  bottom:calc(20px + env(safe-area-inset-bottom, 0px));
+  width:max-content; max-width:calc(100% - 24px);
+  display:flex; align-items:center; gap:12px;
+  background:var(--ink); color:var(--paper);
+  padding:13px 14px 13px 16px; border-radius:var(--r);
+  box-shadow:0 18px 44px -16px rgba(28,28,26,.55);
+  font-size:13.5px; line-height:1.35;
+  animation:toastin .18s ease-out;
+}
+.toast.hide{display:none}
+.toast .tick{
+  flex:none; width:22px; height:22px; border-radius:50%;
+  background:var(--accent-lite); color:var(--ink);
+  display:grid; place-items:center; font-size:12px; font-weight:700;
+}
+.toast .tmsg{flex:1 1 auto; min-width:0; overflow-wrap:anywhere}
+.toast .tmsg b{font-weight:600}
+.toast .tmsg .sub{display:block; color:#A9A9A1; font-size:12.5px; margin-top:1px}
+.toast .tx{flex:none; border:0; background:transparent; color:#A9A9A1; font-size:17px; line-height:1; padding:0 4px}
+.toast .tx:hover{color:#FFFFFF}
+@keyframes toastin{
+  from{opacity:0; transform:translateX(-50%) translateY(10px)}
+  to{opacity:1; transform:translateX(-50%) translateY(0)}
+}
+/* the row you just took, briefly */
+.slot.just{background:var(--accent-soft)}
 
 /* ---------- lower row ---------- */
 .lower{display:grid; grid-template-columns:repeat(auto-fit,minmax(262px,1fr)); gap:12px; margin-top:12px}
@@ -356,7 +417,6 @@ input,select{font:inherit; color:var(--ink)}
   .evtbox{padding:2px 16px 12px}
   .evtform{padding:2px 16px 14px}
   .evtrow input[type="time"]{flex:1 1 120px}
-  .bookas{padding:4px 16px 16px}
   .slots{padding:0 8px}
   .slot{padding:11px 8px; gap:9px}
   .pfoot{padding:12px 16px 16px}
@@ -366,7 +426,7 @@ input,select{font:inherit; color:var(--ink)}
   .mgrbox{padding:13px 16px}
   .mgrbox input{width:100%}
   /* 16px or Safari zooms the page in when a field takes focus */
-  .namerow input,.evtrow input,.mgrbox input{font-size:16px}
+  .mfield input,.evtrow input,.mgrbox input{font-size:16px}
   .foot{gap:8px; flex-direction:column; padding:0 2px}
 }
 
@@ -423,7 +483,7 @@ input,select{font:inherit; color:var(--ink)}
     </div>
     <span class="month num" id="monthLabel">&mdash;</span>
     <button class="btn" id="todayBtn" type="button">Today</button>
-    <button class="btn" id="rangeBtn" type="button" aria-pressed="false">Select multiple days</button>
+    <span class="barhint">Click a day &mdash; or drag across the grid for several</span>
   </div>
 
   <div class="cols">
@@ -446,12 +506,6 @@ input,select{font:inherit; color:var(--ink)}
         </div>
         <span class="evthint" id="evtHint"></span>
       </form>
-      <div class="bookas" id="bookAs">
-        <label class="eyebrow" for="artistName">Booking as</label>
-        <div class="namerow">
-          <input id="artistName" type="text" placeholder="Type any name" autocomplete="off" maxlength="48" spellcheck="false">
-        </div>
-      </div>
       <div id="slotsWrap"></div>
       <div id="pfoot"></div>
     </aside>
@@ -481,6 +535,31 @@ input,select{font:inherit; color:var(--ink)}
     </section>
   </div>
 
+  <div class="scrim hide" id="scrim">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" id="modal">
+      <div class="eyebrow" id="mKicker">Station</div>
+      <h2 id="mTitle">Claim this station</h2>
+      <p class="mdates" id="mDates"></p>
+      <form id="mForm" autocomplete="on" novalidate>
+        <div class="mfield">
+          <label class="eyebrow" for="mName">Your name</label>
+          <input id="mName" name="name" type="text" maxlength="48" autocomplete="name" spellcheck="false">
+        </div>
+        <div class="mfield">
+          <label class="eyebrow" for="mEmail">Email</label>
+          <input id="mEmail" name="email" type="email" maxlength="80" autocomplete="email" inputmode="email" spellcheck="false">
+        </div>
+        <p class="merr hide" id="mErr"></p>
+        <div class="mbtns">
+          <button class="btn" id="mCancel" type="button">Cancel</button>
+          <button class="btn primary" id="mConfirm" type="submit">Confirm</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast hide" id="toast" role="status" aria-live="polite"></div>
+
   <div class="foot">
     <span>C/PROJECT &middot; 560 18th St, San Francisco</span>
     <span>Five squares under each date = five stations.</span>
@@ -507,15 +586,19 @@ input,select{font:inherit; color:var(--ink)}
 
   var state = {
     view: new Date(),
-    sel: null,          // single-day mode: iso date
-    mode: "day",        // "day" | "range"
-    rangeA: null,
-    rangeB: null,
+    a: null,            // selection start
+    b: null,            // selection end (equal to a for one day)
+    pickEnd: false,     // waiting for the closing click of a range
+    dragFrom: null,
+    dragged: false,
+    suppressClick: false,
     hover: null,
     bookings: {},
     closed: {},
     events: {},
-    name: "",
+    pending: null,
+    just: {},
+    lastFocus: null,
     db: null,
     isManager: false,   // studio code entered (or owner of the hosted page)
     readOnly: false,    // the server refused our writes
@@ -532,20 +615,24 @@ input,select{font:inherit; color:var(--ink)}
   function longDate(s){ var d = parseIso(s); return DAY[d.getDay()] + ", " + MON[d.getMonth()].slice(0,3) + " " + d.getDate(); }
   function addDays(s, n){ var d = parseIso(s); d.setDate(d.getDate()+n); return iso(d); }
 
-  /* Dates currently being acted on — one day, or every day in the range. */
-  function activeDates(){
-    if (state.mode === "day") return state.sel ? [state.sel] : [];
-    var a = state.rangeA, b = state.rangeB || state.hover || state.rangeA;
+  function span(a, b){
     if (!a) return [];
-    if (b < a) { var t = a; a = b; b = t; }
+    if (!b) b = a;
+    if (b < a){ var t = a; a = b; b = t; }
     var out = [], cur = a, guard = 0;
     while (cur <= b && guard++ < 400){ out.push(cur); cur = addDays(cur, 1); }
     return out;
   }
+  /* What the grid paints right now — includes the live preview while
+     dragging or while waiting for the closing click. */
+  function activeDates(){
+    var end = state.b;
+    if ((state.pickEnd || state.dragFrom) && state.hover) end = state.hover;
+    return span(state.a, end);
+  }
+  /* What a booking would actually apply to. */
   function committedDates(){
-    if (state.mode === "day") return state.sel ? [state.sel] : [];
-    if (!state.rangeA || !state.rangeB) return state.rangeA ? [state.rangeA] : [];
-    return activeDates();
+    return span(state.a, state.b);
   }
 
   function fmtTime(t){
@@ -670,42 +757,31 @@ input,select{font:inherit; color:var(--ink)}
       var c = cells[i];
       var k = c.getAttribute("data-date");
       c.classList.remove("sel","inrange","edge");
-      if (state.mode === "day"){
-        if (k === state.sel) c.classList.add("sel");
-      } else if (inSpan[k]){
-        c.classList.add((k === first || k === last) ? "edge" : "inrange");
-      }
+      if (!inSpan[k]) continue;
+      if (span.length === 1) c.classList.add("sel");
+      else c.classList.add((k === first || k === last) ? "edge" : "inrange");
     }
   }
 
+  /* One rule: a click picks a day. Extending is an explicit, one-shot act —
+     drag across the grid, shift-click, or "Add more days". There is no mode
+     to be stuck in; the next plain click is a plain single day again. */
   function pickDate(k, shift){
-    if (state.mode === "day"){
-      if (shift && state.sel && state.sel !== k){
-        /* shift-click extends from the selected day into a range */
-        setMode("range");
-        state.rangeA = state.sel < k ? state.sel : k;
-        state.rangeB = state.sel < k ? k : state.sel;
-      } else {
-        state.sel = k;
-      }
-    } else if (!state.rangeA || state.rangeB){
-      state.rangeA = k; state.rangeB = null; state.hover = null;
+    if ((state.pickEnd || shift) && state.a){
+      state.b = k;
+      if (state.b < state.a){ var t = state.a; state.a = state.b; state.b = t; }
+      state.pickEnd = false;
     } else {
-      if (k < state.rangeA){ state.rangeB = state.rangeA; state.rangeA = k; }
-      else state.rangeB = k;
-      state.hover = null;
+      state.a = k; state.b = k; state.pickEnd = false;
     }
+    state.hover = null;
     renderAll();
-    /* wait for the closing click before scrolling away from the grid */
-    if (state.mode === "day" || state.rangeB) revealPanel();
+    revealPanel();
   }
 
-  function setMode(m){
-    state.mode = m;
-    var btn = document.getElementById("rangeBtn");
-    btn.setAttribute("aria-pressed", m === "range" ? "true" : "false");
-    btn.textContent = m === "range" ? "One day at a time" : "Select multiple days";
-  }
+  function startPickEnd(){ state.pickEnd = true; state.hover = null; renderAll(); }
+  function stopPickEnd(){ state.pickEnd = false; state.hover = null; renderAll(); }
+  function collapseToDay(){ state.b = state.a; state.pickEnd = false; state.hover = null; renderAll(); }
 
   /* ---------- panel ---------- */
   function renderPanel(){
@@ -715,32 +791,47 @@ input,select{font:inherit; color:var(--ink)}
     head.textContent = ""; wrap.textContent = ""; foot.textContent = "";
 
     var dates = committedDates();
-    var multi = state.mode === "range";
+    var multi = dates.length > 1;
 
     /* --- heading --- */
     if (!dates.length){
       head.appendChild(el("div","eyebrow","Nothing selected"));
-      head.appendChild(el("h2",null, multi ? "Pick a start date" : "Pick a date"));
-      head.appendChild(el("span","tally", multi
-        ? "Click the first day, then the last. Everything between is included."
-        : "Click any date in the grid."));
+      head.appendChild(el("h2",null,"Pick a date"));
+      head.appendChild(el("span","tally","Click any date in the grid."));
       return;
     }
 
-    if (multi && (!state.rangeB || dates.length > 1)){
-      var span = activeDates();
-      var label = span.length > 1
-        ? shortDate(span[0]) + " – " + shortDate(span[span.length-1])
-        : shortDate(span[0]);
-      head.appendChild(el("div","eyebrow", state.rangeB ? span.length + (span.length === 1 ? " day" : " days") : "Now click the last day"));
-      head.appendChild(el("h2",null, label));
-      if (state.rangeB){
-        var openTotal = 0;
-        span.forEach(function(d){ if (!state.closed[d]) openTotal += (5 - bookedCount(d)); });
-        head.appendChild(el("span","tally", openTotal + " open station-days across this stretch"));
-      } else {
-        head.appendChild(el("span","tally","Hover the grid to preview, click to set the end."));
+    if (state.pickEnd || state.dragFrom){
+      var prev = activeDates();
+      var dragging = !!state.dragFrom;
+      head.appendChild(el("div","eyebrow", dragging ? "Selecting" : "Pick the last day"));
+      head.appendChild(el("h2",null, prev.length > 1
+        ? shortDate(prev[0]) + " \u2013 " + shortDate(prev[prev.length-1])
+        : shortDate(prev[0])));
+      head.appendChild(el("span","tally", prev.length > 1
+        ? prev.length + " days"
+        : (dragging ? "Keep dragging to take in more days."
+                    : "Click another day in the grid \u2014 everything in between is included.")));
+      if (!dragging){
+        var cancelRow = el("div","selctl");
+        var cnl = el("button","btn sm quiet","Cancel");
+        cnl.type = "button";
+        cnl.addEventListener("click", stopPickEnd);
+        cancelRow.appendChild(cnl);
+        head.appendChild(cancelRow);
       }
+      wrap.appendChild(el("div","hint", dragging
+        ? "Let go to see which stations are free the whole way through."
+        : "Once you pick the last day you'll see which stations are free the whole way through."));
+      return;
+    }
+
+    if (multi){
+      var openTotal = 0;
+      dates.forEach(function(d){ if (!state.closed[d]) openTotal += (5 - bookedCount(d)); });
+      head.appendChild(el("div","eyebrow", dates.length + " days"));
+      head.appendChild(el("h2",null, shortDate(dates[0]) + " \u2013 " + shortDate(dates[dates.length-1])));
+      head.appendChild(el("span","tally", openTotal + " open station-days across this stretch"));
     } else {
       var date = dates[0];
       var isClosed = !!state.closed[date];
@@ -750,17 +841,20 @@ input,select{font:inherit; color:var(--ink)}
       head.appendChild(el("span","tally", count + " of 5 stations booked"));
     }
 
-    /* --- waiting for the end of a range --- */
-    if (multi && state.rangeA && !state.rangeB){
-      wrap.appendChild(el("div","hint","Pick the last day of the stretch to see which stations are free the whole way through."));
-      var clr = el("div","pfoot");
-      var c1 = el("button","btn quiet","Clear");
-      c1.type = "button";
-      c1.addEventListener("click", function(){ state.rangeA = null; state.rangeB = null; state.hover = null; renderCalendar(); renderPanel(); });
-      clr.appendChild(c1);
-      foot.appendChild(clr);
-      return;
+    /* --- one control, and it changes with what's selected --- */
+    var ctl = el("div","selctl");
+    if (multi){
+      var one = el("button","btn sm quiet","Just " + shortDate(dates[0]));
+      one.type = "button";
+      one.addEventListener("click", collapseToDay);
+      ctl.appendChild(one);
+    } else {
+      var more = el("button","btn sm quiet","+ Add more days");
+      more.type = "button";
+      more.addEventListener("click", startPickEnd);
+      ctl.appendChild(more);
     }
+    head.appendChild(ctl);
 
     var list = el("ul","slots");
 
@@ -770,7 +864,8 @@ input,select{font:inherit; color:var(--ink)}
       STATIONS.forEach(function(n){
         var b = bookingAt(date1, n);
         var held = b && b.artist === HOLD;
-        var li = el("li","slot" + (held ? " held" : (b ? " taken" : "")));
+        var li = el("li","slot" + (held ? " held" : (b ? " taken" : ""))
+                    + (state.just[date1 + "|" + n] ? " just" : ""));
         li.appendChild(el("div","stn num", String(n)));
 
         var who = el("div","who");
@@ -781,7 +876,9 @@ input,select{font:inherit; color:var(--ink)}
           var nm = el("div","name", b.artist);
           if (b.example) nm.appendChild(el("span","tag","example"));
           who.appendChild(nm);
-          who.appendChild(el("div","note","Station " + n + " · whole day"));
+          /* the studio sees the contact; artists just see who has it */
+          who.appendChild(el("div","note",
+            (state.isManager && b.email) ? b.email : "Station " + n + " · whole day"));
         } else {
           who.appendChild(el("div","open", closed1 ? "Studio closed" : "Open"));
         }
@@ -864,12 +961,7 @@ input,select{font:inherit; color:var(--ink)}
       t.addEventListener("click", function(){ setClosed(dates, anyOpen); });
       f.appendChild(t);
     }
-    if (dates.length > 1 || state.mode === "range"){
-      var c2 = el("button","btn quiet","Clear selection");
-      c2.type = "button";
-      c2.addEventListener("click", function(){ state.rangeA = null; state.rangeB = null; state.hover = null; renderCalendar(); renderPanel(); });
-      f.appendChild(c2);
-    }
+
     if (f.childNodes.length) foot.appendChild(f);
   }
 
@@ -1000,30 +1092,107 @@ input,select{font:inherit; color:var(--ink)}
     }).filter(Boolean);
   }
 
+  /* ---------- claim dialog ---------- */
+  var ME_KEY = "cproject.me";
+
   function claim(dates, n){
-    var inp = document.getElementById("artistName");
-    var name = (inp.value || "").trim();
-    if (!name){
-      inp.classList.add("warn");
-      inp.placeholder = "Type a name first";
-      inp.focus();
-      return;
-    }
-    inp.classList.remove("warn");
-    state.name = name;
-    write(dates, n, name);
+    if (!dates.length) return;
+    state.pending = { dates: dates, station: n };
+    state.lastFocus = document.activeElement;
+
+    document.getElementById("mKicker").textContent = "Station " + n;
+    document.getElementById("mTitle").textContent = dates.length > 1
+      ? "Claim " + dates.length + " days" : "Claim this day";
+    document.getElementById("mDates").textContent = dates.length > 1
+      ? shortDate(dates[0]) + " \u2013 " + shortDate(dates[dates.length-1]) + " \u00b7 " + dates.length + " days"
+      : longDate(dates[0]);
+
+    var nm = document.getElementById("mName");
+    var em = document.getElementById("mEmail");
+    /* this device's last details, so regulars don't retype */
+    try {
+      var me = JSON.parse(window.localStorage.getItem(ME_KEY) || "{}");
+      if (!nm.value && me.name) nm.value = me.name;
+      if (!em.value && me.email) em.value = me.email;
+    } catch(e){}
+    nm.classList.remove("warn"); em.classList.remove("warn");
+    hideErr();
+
+    document.getElementById("scrim").className = "scrim";
+    setTimeout(function(){ (nm.value ? em : nm).focus(); }, 0);
   }
 
-  function write(dates, n, name){
+  function closeClaim(){
+    document.getElementById("scrim").className = "scrim hide";
+    state.pending = null;
+    if (state.lastFocus && state.lastFocus.focus){
+      try { state.lastFocus.focus(); } catch(e){}
+    }
+    state.lastFocus = null;
+  }
+
+  var toastTimer = null, justTimer = null;
+
+  function hideToast(){
+    var t = document.getElementById("toast");
+    t.className = "toast hide";
+    t.textContent = "";
+  }
+
+  function toast(headline, detail){
+    var t = document.getElementById("toast");
+    t.textContent = "";
+    t.appendChild(el("span","tick","\u2713"));
+    var m = el("span","tmsg");
+    m.appendChild(el("b", null, headline));
+    if (detail) m.appendChild(el("span","sub", detail));
+    t.appendChild(m);
+    var x = el("button","tx","\u00d7");
+    x.type = "button";
+    x.setAttribute("aria-label","Dismiss");
+    x.addEventListener("click", hideToast);
+    t.appendChild(x);
+    t.className = "toast";
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, 6000);
+  }
+
+  function showErr(msg){
+    var e = document.getElementById("mErr");
+    e.textContent = msg; e.className = "merr";
+  }
+  function hideErr(){
+    var e = document.getElementById("mErr");
+    e.textContent = ""; e.className = "merr hide";
+  }
+
+  function write(dates, n, name, email){
     dates.forEach(function(d){
-      state.bookings[d + "|" + n] = { artist: name };
+      state.bookings[d + "|" + n] = { artist: name, email: email || "" };
     });
+
+    if (name !== HOLD){
+      /* mark the rows just taken, then let them settle back */
+      state.just = {};
+      dates.forEach(function(d){ state.just[d + "|" + n] = true; });
+      if (justTimer) clearTimeout(justTimer);
+      justTimer = setTimeout(function(){ state.just = {}; renderAll(); }, 3500);
+
+      toast(
+        dates.length > 1
+          ? "Station " + n + " is yours for " + dates.length + " days"
+          : "Station " + n + " is yours",
+        (dates.length > 1
+          ? shortDate(dates[0]) + " \u2013 " + shortDate(dates[dates.length-1])
+          : longDate(dates[0])) + " \u00b7 booked as " + name
+      );
+    }
+
     renderAll();
-    if (dates.length > 1) notice("<strong>Booked.</strong> Station " + n + " is held for " + name + " on " + dates.length + " days.");
-    else notice("");
+    notice("");
     if (!state.db) return;
     dates.forEach(function(d){
-      state.db.doc("bookings/" + d + "_s" + n).set({ date:d, station:n, artist:name, ts:Date.now() })
+      state.db.doc("bookings/" + d + "_s" + n).set({ date:d, station:n, artist:name, email:email || "", ts:Date.now() })
         .catch(function(e){ writeFailed(e, "That booking didn't save."); });
     });
   }
@@ -1139,9 +1308,47 @@ input,select{font:inherit; color:var(--ink)}
   });
 
   /* ---------- controls ---------- */
-  document.getElementById("artistName").addEventListener("input", function(){
-    state.name = this.value;
-    this.classList.remove("warn");
+  document.getElementById("mForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    if (!state.pending) return;
+    var nm = document.getElementById("mName");
+    var em = document.getElementById("mEmail");
+    var name = nm.value.trim();
+    var email = em.value.trim();
+
+    nm.classList.remove("warn"); em.classList.remove("warn");
+    if (!name){
+      nm.classList.add("warn"); showErr("Please add your name."); nm.focus(); return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){
+      em.classList.add("warn");
+      showErr(email ? "That email doesn't look right." : "Please add your email.");
+      em.focus(); return;
+    }
+    hideErr();
+    try { window.localStorage.setItem(ME_KEY, JSON.stringify({ name:name, email:email })); } catch(err){}
+
+    var job = state.pending;
+    closeClaim();
+    write(job.dates, job.station, name, email);
+  });
+
+  document.getElementById("mCancel").addEventListener("click", closeClaim);
+  document.getElementById("scrim").addEventListener("mousedown", function(e){
+    if (e.target === this) closeClaim();
+  });
+  document.getElementById("mName").addEventListener("input", function(){ this.classList.remove("warn"); hideErr(); });
+  document.getElementById("mEmail").addEventListener("input", function(){ this.classList.remove("warn"); hideErr(); });
+
+  document.addEventListener("keydown", function(e){
+    if (!state.pending) return;
+    if (e.key === "Escape"){ e.preventDefault(); closeClaim(); return; }
+    if (e.key !== "Tab") return;
+    var f = document.querySelectorAll("#modal input, #modal button");
+    if (!f.length) return;
+    var first = f[0], last = f[f.length-1];
+    if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
   });
   document.getElementById("evtForm").addEventListener("submit", function(e){
     e.preventDefault();
@@ -1171,48 +1378,73 @@ input,select{font:inherit; color:var(--ink)}
   document.getElementById("todayBtn").addEventListener("click", function(){
     var t = new Date();
     state.view = new Date(t.getFullYear(), t.getMonth(), 1);
-    if (state.mode === "day") state.sel = iso(t);
+    state.a = iso(t); state.b = iso(t); state.pickEnd = false;
     subscribe(); renderAll();
-  });
-  document.getElementById("rangeBtn").addEventListener("click", function(){
-    if (state.mode === "day"){
-      setMode("range");
-      /* Start empty so the viewer's first click opens the range. */
-      state.rangeA = null; state.rangeB = null; state.hover = null;
-    } else {
-      setMode("day");
-      state.sel = state.rangeA || state.sel || iso(new Date());
-      state.rangeA = null; state.rangeB = null; state.hover = null;
-    }
-    notice("");
-    renderAll();
   });
 
   /* One delegated listener each — cells come and go, the grid does not. */
   var gridEl = document.getElementById("grid");
+  function cellOf(e){
+    return e.target && e.target.closest ? e.target.closest(".day[data-date]") : null;
+  }
+
   gridEl.addEventListener("click", function(e){
-    var cell = e.target.closest ? e.target.closest(".day[data-date]") : null;
+    /* a drag already settled the selection; ignore the click that follows it */
+    if (state.suppressClick){ state.suppressClick = false; return; }
+    var cell = cellOf(e);
     if (!cell) return;
     pickDate(cell.getAttribute("data-date"), e.shiftKey);
   });
+
+  gridEl.addEventListener("mousedown", function(e){
+    if (e.button !== 0) return;
+    var cell = cellOf(e);
+    if (!cell) return;
+    state.suppressClick = false;
+    state.dragFrom = cell.getAttribute("data-date");
+    state.dragged = false;
+  });
+
   gridEl.addEventListener("mouseover", function(e){
-    if (state.mode !== "range" || !state.rangeA || state.rangeB) return;
-    var cell = e.target.closest ? e.target.closest(".day[data-date]") : null;
+    var cell = cellOf(e);
     if (!cell) return;
     var k = cell.getAttribute("data-date");
-    if (k === state.hover) return;
-    state.hover = k;
-    paintSelection();
-    renderPanel();
+    if (state.dragFrom){
+      if (k !== state.dragFrom) state.dragged = true;
+      if (k === state.hover) return;
+      state.a = state.dragFrom;
+      state.hover = k;
+      paintSelection(); renderPanel();
+      return;
+    }
+    if (state.pickEnd){
+      if (k === state.hover) return;
+      state.hover = k;
+      paintSelection(); renderPanel();
+    }
   });
+
   gridEl.addEventListener("mouseleave", function(){
-    if (state.mode === "range" && state.rangeA && !state.rangeB && state.hover){
+    if (!state.dragFrom && state.pickEnd && state.hover){
       state.hover = null; paintSelection(); renderPanel();
     }
   });
 
+  document.addEventListener("mouseup", function(){
+    if (!state.dragFrom) return;
+    var from = state.dragFrom, to = state.hover, moved = state.dragged;
+    state.dragFrom = null; state.dragged = false; state.hover = null;
+    if (moved && to){
+      state.a = from; state.b = to;
+      if (state.b < state.a){ var t = state.a; state.a = state.b; state.b = t; }
+      state.pickEnd = false;
+      state.suppressClick = true;
+      renderAll(); revealPanel();
+    }
+  });
+
   /* ---------- boot ---------- */
-  state.sel = iso(new Date());
+  state.a = iso(new Date()); state.b = state.a;
   try { if (window.localStorage.getItem(LS_KEY) === "1") state.isManager = true; } catch(e){}
   setManager(state.isManager, false);
   setConn("", "Connecting…");
@@ -1231,7 +1463,7 @@ input,select{font:inherit; color:var(--ink)}
       var next = {};
       docsOf(snap).forEach(function(d){
         if (!d.date || !d.station || !d.artist) return;
-        next[d.date + "|" + d.station] = { artist:d.artist, example:!!d.example };
+        next[d.date + "|" + d.station] = { artist:d.artist, email:d.email || "", example:!!d.example };
       });
       state.bookings = next;
       renderAll();
