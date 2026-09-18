@@ -61,6 +61,7 @@ input,select{font:inherit; color:var(--ink)}
   font-size:16px; font-weight:600; letter-spacing:-.03em; text-transform:uppercase;
   color:var(--ink); line-height:1;
 }
+.brandline{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; min-width:0}
 .addr{font-size:12.5px; color:var(--muted); letter-spacing:.01em}
 .mast{
   display:flex; align-items:flex-end; justify-content:space-between; gap:18px; flex-wrap:wrap;
@@ -114,13 +115,12 @@ input,select{font:inherit; color:var(--ink)}
 .btn.danger:hover{background:var(--alert-bg)}
 .btn.sm{padding:6px 13px; font-size:11.5px}
 .btn.armed{background:var(--alert); color:#FFFFFF; box-shadow:none}
-.btn[aria-pressed="true"]{background:var(--ink); color:var(--on-ink)}
-.spacer{flex:1 1 auto}
+.btn[aria-pressed="true"]{background:var(--ink); color:var(--on-ink); box-shadow:none}
 
 /* ---------- studio code ---------- */
 .mgrbox{
   display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-  background:var(--ink); border-radius:var(--r); padding:14px 18px; margin-bottom:12px;
+  background:var(--ink); border-radius:var(--r); padding:14px 18px; margin-top:10px;
 }
 .mgrbox.hide{display:none}
 .mgrbox label{margin:0; color:var(--accent-lite)}
@@ -146,19 +146,26 @@ input,select{font:inherit; color:var(--ink)}
 .grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px}
 .day{
   position:relative; display:flex; flex-direction:column; align-items:center; gap:8px;
-  min-height:88px; padding:11px 4px 10px; background:var(--tint);
-  border:0; box-shadow:inset 0 0 0 1.5px transparent; border-radius:var(--r-sm);
+  min-height:88px; padding:11px 4px 10px; background:var(--paper);
+  border:0; box-shadow:inset 0 0 0 1px var(--line); border-radius:var(--r-sm);
   text-align:center; transition:background .14s, box-shadow .14s;
 }
 .day:hover{background:var(--tint-2)}
-.day.blank{background:transparent; pointer-events:none}
+.day.blank{background:transparent; box-shadow:none; pointer-events:none}
+/* days gone by recede; today and everything ahead keep the live surface */
+.day.past{background:var(--ground); box-shadow:none}
+.day.past:hover{background:var(--tint-2)}
+.day.past .dnum{color:var(--muted); font-weight:400}
+.day.past .cnt{color:var(--muted); opacity:.75}
+.day.past .pip{opacity:.4}
+.day.past .evt{opacity:.45}
 .dnum{
   font-variant-numeric:tabular-nums;
   font-size:16px; font-weight:500; width:28px; height:28px;
   display:grid; place-items:center; border-radius:50%; line-height:1;
 }
 .day.today .dnum{box-shadow:inset 0 0 0 1.5px var(--ink); font-weight:600}
-.day.inrange{background:var(--accent-soft)}
+.day.inrange{background:var(--accent-soft); box-shadow:none}
 .day.edge{background:var(--accent-soft); box-shadow:inset 0 0 0 1.5px var(--ink)}
 .day.sel{background:var(--paper); box-shadow:inset 0 0 0 1.5px var(--ink)}
 .day.edge .dnum,.day.sel .dnum{background:var(--ink); color:var(--on-ink); box-shadow:none}
@@ -286,13 +293,102 @@ input,select{font:inherit; color:var(--ink)}
   display:flex; gap:18px; flex-wrap:wrap;
 }
 @media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important} }
+
+/* ======================================================
+   SMALL SCREENS — everything above 940px is untouched
+   ====================================================== */
+
+/* --- the panel stops following the scroll once stacked --- */
+@media (max-width:940px){
+  .panel{position:static}
+  .cols{gap:10px}
+  .mast{padding:20px 4px 14px}
+  .topbar{padding:14px 20px}
+}
+
+/* --- tablet: the grid gives up its desktop breathing room --- */
+@media (max-width:768px){
+  .wrap{padding-block:0 32px}
+  .cal{padding:12px}
+  .grid,.dow{gap:5px}
+  .day{min-height:78px; padding:10px 3px 9px; gap:7px}
+  .dnum{width:26px; height:26px; font-size:15px}
+  .pips{gap:3px}
+  .pip{width:8px; height:8px}
+  .day .evt{top:7px; right:7px}
+  .bar{border-radius:var(--r); padding:10px}
+  .btn{min-height:40px; display:inline-flex; align-items:center; justify-content:center}
+  .icon{width:40px; height:40px}
+  .lower{gap:10px}
+}
+
+/* --- phone: seven columns is the fixed constraint, so the cells go compact --- */
+@media (max-width:560px){
+  .wrap{padding:0 12px; padding-block:0 28px}
+  .topbar{border-radius:var(--r); padding:13px 16px; gap:10px; align-items:center}
+  .brandline{flex-direction:column; align-items:flex-start; gap:2px}
+  .addr{font-size:11.5px}
+  .wordmark{font-size:15px}
+  .mast{padding:16px 2px 12px; gap:12px}
+  .mast .sub{font-size:12.5px}
+
+  .cal{padding:8px}
+  .grid,.dow{gap:4px}
+  .dow span{font-size:9px; letter-spacing:.06em}
+  .day{min-height:62px; padding:7px 2px; gap:5px; border-radius:11px}
+  .dnum{width:23px; height:23px; font-size:14px}
+  .pips{gap:2px}
+  .pip{width:6px; height:6px; border-radius:2px}
+  .cnt{font-size:9px}
+  .day .evt{top:5px; right:5px; width:5px; height:5px}
+
+  .phead{padding:15px 16px 14px}
+  .phead h2{font-size:23px}
+  .evtbox{padding:2px 16px 12px}
+  .evtform{padding:2px 16px 14px}
+  .evtrow input[type="time"]{flex:1 1 120px}
+  .bookas{padding:4px 16px 16px}
+  .slots{padding:0 8px}
+  .slot{padding:11px 8px; gap:9px}
+  .pfoot{padding:12px 16px 16px}
+  .hint{padding:6px 16px 16px}
+
+  .box{padding:16px}
+  .mgrbox{padding:13px 16px}
+  .mgrbox input{width:100%}
+  .foot{gap:8px; flex-direction:column; padding:0 2px}
+}
+
+/* --- very narrow (320px class): five pips still have to fit one cell --- */
+@media (max-width:380px){
+  .slot{flex-wrap:wrap}
+  .acts{width:100%; padding-left:43px}
+  .cal{padding:6px}
+  .grid,.dow{gap:3px}
+  .day{min-height:58px; padding:6px 1px; border-radius:9px}
+  .dnum{width:21px; height:21px; font-size:13px}
+  .pips{gap:1px}
+  .pip{width:5px; height:5px}
+  .cnt{font-size:8.5px}
+  .day .evt{top:4px; right:4px; width:4px; height:4px}
+}
 </style>
 
 <div class="wrap">
   <div class="topbar">
-    <div class="wordmark">C/PROJECT</div>
-    <div class="addr">560 18th St, San Francisco</div>
+    <div class="brandline">
+      <div class="wordmark">C/PROJECT</div>
+      <div class="addr">560 18th St, San Francisco</div>
+    </div>
+    <button class="btn sm quiet" id="mgrBtn" type="button" aria-pressed="false">Studio Login</button>
   </div>
+
+  <form class="mgrbox hide" id="mgrBox" autocomplete="off">
+    <label class="eyebrow" for="mgrCode">Studio code</label>
+    <input id="mgrCode" type="password" autocomplete="off" maxlength="24" aria-describedby="mgrMsg">
+    <button class="btn primary" id="mgrGo" type="submit">Unlock</button>
+    <span class="mgrmsg" id="mgrMsg">Unlocks Hold, events and Mark studio closed on this device.</span>
+  </form>
 
   <div class="mast">
     <div>
@@ -315,16 +411,7 @@ input,select{font:inherit; color:var(--ink)}
     <span class="month num" id="monthLabel">&mdash;</span>
     <button class="btn" id="todayBtn" type="button">Today</button>
     <button class="btn" id="rangeBtn" type="button" aria-pressed="false">Select multiple days</button>
-    <button class="btn" id="mgrBtn" type="button" aria-pressed="false">Studio tools</button>
-    <span class="spacer"></span>
   </div>
-
-  <form class="mgrbox hide" id="mgrBox" autocomplete="off">
-    <label class="eyebrow" for="mgrCode">Studio code</label>
-    <input id="mgrCode" type="password" autocomplete="off" maxlength="24" aria-describedby="mgrMsg">
-    <button class="btn primary" id="mgrGo" type="submit">Unlock</button>
-    <span class="mgrmsg" id="mgrMsg">Unlocks Hold and Mark studio closed on this device.</span>
-  </form>
 
   <div class="cols">
     <section class="card cal" aria-label="Month calendar">
@@ -468,6 +555,17 @@ input,select{font:inherit; color:var(--ink)}
     return out;
   }
 
+  /* Stacked layouts put the day panel below the fold, so tapping a date would look
+     like nothing happened. No-ops on desktop. */
+  function revealPanel(){
+    if (!window.matchMedia || !window.matchMedia("(max-width: 940px)").matches) return;
+    var p = document.querySelector(".panel");
+    if (!p || !p.scrollIntoView) return;
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    try { p.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); }
+    catch(e){ p.scrollIntoView(); }
+  }
+
   function el(tag, cls, txt){
     var n = document.createElement(tag);
     if (cls) n.className = cls;
@@ -515,6 +613,7 @@ input,select{font:inherit; color:var(--ink)}
       var cls = "day";
       if (dt.getDay() === 0 || dt.getDay() === 6) cls += " wknd";
       if (key === todayIso) cls += " today";
+      if (key < todayIso) cls += " past";
       if (state.closed[key]) cls += " closed";
 
       var count = bookedCount(key);
@@ -584,6 +683,8 @@ input,select{font:inherit; color:var(--ink)}
       state.hover = null;
     }
     renderAll();
+    /* wait for the closing click before scrolling away from the grid */
+    if (state.mode === "day" || state.rangeB) revealPanel();
   }
 
   function setMode(m){
@@ -984,7 +1085,7 @@ input,select{font:inherit; color:var(--ink)}
     state.isManager = !!on;
     var btn = document.getElementById("mgrBtn");
     btn.setAttribute("aria-pressed", on ? "true" : "false");
-    btn.textContent = on ? "Studio tools · on" : "Studio tools";
+    btn.textContent = on ? "Log out" : "Studio Login";
     document.getElementById("mgrBox").className = "mgrbox hide";
     if (remember){
       try {
