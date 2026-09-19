@@ -614,6 +614,7 @@ const firebaseConfig = {
     pending: null,
     just: {},
     lastFocus: null,
+    myEmail: null,      // read from localStorage on first use
     db: null,           // Firestore instance
     isManager: false,   // studio code entered on this device
     readOnly: false,    // Firestore refused our writes
@@ -903,7 +904,9 @@ const firebaseConfig = {
 
         var acts = el("div","acts");
         if (b){
-          if (!(held && !state.isManager)){
+          /* Your own booking on this device, or the studio. Everyone else just
+             sees who has the station. */
+          if (state.isManager || (!held && isMine(b))){
             var rel = el("button","btn sm danger", held ? "Release" : "Give up");
             rel.type = "button";
             rel.addEventListener("click", function(){
@@ -1097,6 +1100,23 @@ const firebaseConfig = {
 
   /* ---------- claim dialog ---------- */
   var ME_KEY = "cproject.me";
+
+  /* The email this browser last booked with. It only decides which buttons are
+     drawn — it is not a permission check, and Firestore does not know about it. */
+  function myEmail(){
+    if (state.myEmail === null){
+      try {
+        var me = JSON.parse(window.localStorage.getItem(ME_KEY) || "{}");
+        state.myEmail = String(me.email || "").trim().toLowerCase();
+      } catch(e){ state.myEmail = ""; }
+    }
+    return state.myEmail;
+  }
+  function isMine(b){
+    var mine = myEmail();
+    if (!mine || !b || !b.email) return false;
+    return String(b.email).trim().toLowerCase() === mine;
+  }
 
   function claim(dates, n){
     if (!dates.length) return;
@@ -1405,6 +1425,7 @@ const firebaseConfig = {
     }
     hideErr();
     try { window.localStorage.setItem(ME_KEY, JSON.stringify({ name:name, email:email })); } catch(err){}
+    state.myEmail = email.trim().toLowerCase();
 
     var job = state.pending;
     closeClaim();
