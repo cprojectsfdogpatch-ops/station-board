@@ -566,7 +566,22 @@ input,select{font:inherit; color:var(--ink)}
   </div>
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import {
+  getFirestore, collection, doc, query, where, onSnapshot,
+  setDoc, deleteDoc, runTransaction, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBLNeIbgK679GftNoQQH7W9UEfUeNVn91M",
+  authDomain: "c-project-station-board.firebaseapp.com",
+  projectId: "c-project-station-board",
+  storageBucket: "c-project-station-board.firebasestorage.app",
+  messagingSenderId: "437633921195",
+  appId: "1:437633921195:web:66ff411a5456e957ba87ee"
+};
+
 (function(){
   "use strict";
 
@@ -599,11 +614,13 @@ input,select{font:inherit; color:var(--ink)}
     pending: null,
     just: {},
     lastFocus: null,
-    db: null,
-    isManager: false,   // studio code entered (or owner of the hosted page)
-    readOnly: false,    // the server refused our writes
-    unsub: null,
-    localOnly: false
+    db: null,           // Firestore instance
+    isManager: false,   // studio code entered on this device
+    readOnly: false,    // Firestore refused our writes
+    unsub: null,        // bookings listener for the visible window
+    unsubClosed: null,
+    unsubEvents: null,
+    connected: false
   };
 
   /* ---------- dates ---------- */
@@ -1075,22 +1092,8 @@ input,select{font:inherit; color:var(--ink)}
   function renderAll(){ renderCalendar(); renderPanel(); renderTally(); renderEvents(); }
 
   /* ---------- writes ---------- */
-  function docsOf(snap){
-    if (!snap) return [];
-    var arr = Array.isArray(snap) ? snap
-      : Array.isArray(snap.docs) ? snap.docs
-      : Array.isArray(snap.documents) ? snap.documents
-      : Array.isArray(snap.data) ? snap.data
-      : Array.isArray(snap.items) ? snap.items : [];
-    return arr.map(function(d){
-      if (!d) return null;
-      var data = typeof d.data === "function" ? d.data() : (d.data && typeof d.data === "object" ? d.data : d);
-      var out = {};
-      for (var k in data) if (Object.prototype.hasOwnProperty.call(data,k)) out[k] = data[k];
-      out.__id = d.id || d.doc_id || d.docId || "";
-      return out;
-    }).filter(Boolean);
-  }
+  function bookingId(d, n){ return d + "_s" + n; }
+  function bookingRef(d, n){ return doc(state.db, "bookings", bookingId(d, n)); }
 
   /* ---------- claim dialog ---------- */
   var ME_KEY = "cproject.me";
@@ -1166,82 +1169,157 @@ input,select{font:inherit; color:var(--ink)}
     e.textContent = ""; e.className = "merr hide";
   }
 
-  function write(dates, n, name, email){
-    dates.forEach(function(d){
-      state.bookings[d + "|" + n] = { artist: name, email: email || "" };
-    });
+  function noDb(what){
+    console.error("[station board] " + what + " — Firestore is not connected.");
+    notice("<strong>Not connected.</strong> " + what + " was not saved. Check your connection and reload.");
+  }
 
-    if (name !== HOLD){
-      /* mark the rows just taken, then let them settle back */
-      state.just = {};
-      dates.forEach(function(d){ state.just[d + "|" + n] = true; });
-      if (justTimer) clearTimeout(justTimer);
-      justTimer = setTimeout(function(){ state.just = {}; renderAll(); }, 3500);
-
-      toast(
-        dates.length > 1
-          ? "Station " + n + " is yours for " + dates.length + " days"
-          : "Station " + n + " is yours",
-        (dates.length > 1
-          ? shortDate(dates[0]) + " \u2013 " + shortDate(dates[dates.length-1])
-          : longDate(dates[0])) + " \u00b7 booked as " + name
-      );
-    }
-
-    renderAll();
-    notice("");
-    if (!state.db) return;
-    dates.forEach(function(d){
-      state.db.doc("bookings/" + d + "_s" + n).set({ date:d, station:n, artist:name, email:email || "", ts:Date.now() })
-        .catch(function(e){ writeFailed(e, "That booking didn't save."); });
+  /* One transaction for the whole stretch: read every target document first,
+     then write only the ones still free. Two people claiming the same station
+     at the same moment cannot both win. */
+  function bookDates(dates, n, name, email){
+    return runTransaction(state.db, function(tx){
+      var refs = dates.map(function(d){ return bookingRef(d, n); });
+      var reads = refs.map(function(r){ return tx.get(r); });
+      return Promise.all(reads).then(function(snaps){
+        var free = [], taken = [];
+        snaps.forEach(function(snap, i){
+          var held = snap.exists() && snap.data() && snap.data().artist;
+          if (held) taken.push(dates[i]); else free.push(i);
+        });
+        free.forEach(function(i){
+          tx.set(refs[i], {
+            date: dates[i],
+            station: n,
+            artist: name,
+            email: email || "",
+            ts: serverTimestamp()
+          });
+        });
+        return { booked: free.map(function(i){ return dates[i]; }), taken: taken };
+      });
     });
   }
 
+  /* Firestore document ids can't contain "/" and can't be "." or "..".
+     Emails never legitimately contain "/", but sanitise anyway. */
+  function artistId(email){
+    return String(email).trim().toLowerCase().replace(/\//g, "_").slice(0, 400);
+  }
+
+  /* Only ever called after a booking has actually committed. firstBooking is
+     written once, at creation, and never touched again. */
+  function upsertArtist(name, email){
+    var id = artistId(email);
+    if (!id) return Promise.resolve();
+    var ref = doc(state.db, "artists", id);
+    return runTransaction(state.db, function(tx){
+      return tx.get(ref).then(function(snap){
+        if (snap.exists()){
+          tx.update(ref, {
+            name: name,
+            email: email,
+            lastBooking: serverTimestamp()
+          });
+        } else {
+          tx.set(ref, {
+            name: name,
+            email: email,
+            firstBooking: serverTimestamp(),
+            lastBooking: serverTimestamp()
+          });
+        }
+      });
+    });
+  }
+
+  function write(dates, n, name, email){
+    if (!state.db){ noDb("That booking"); return; }
+    notice("");
+    bookDates(dates, n, name, email).then(function(res){
+      if (!res.booked.length){
+        notice("<strong>Just taken.</strong> Station " + n + " is no longer free on " +
+               (res.taken.length > 1 ? "those days" : longDate(res.taken[0])) + ".");
+        return;
+      }
+      var booked = res.booked;
+
+      if (name !== HOLD){
+        /* mark the rows just taken, then let them settle back */
+        state.just = {};
+        booked.forEach(function(d){ state.just[d + "|" + n] = true; });
+        if (justTimer) clearTimeout(justTimer);
+        justTimer = setTimeout(function(){ state.just = {}; renderAll(); }, 3500);
+
+        toast(
+          booked.length > 1
+            ? "Station " + n + " is yours for " + booked.length + " days"
+            : "Station " + n + " is yours",
+          (booked.length > 1
+            ? shortDate(booked[0]) + " \u2013 " + shortDate(booked[booked.length-1])
+            : longDate(booked[0])) + " \u00b7 booked as " + name
+        );
+      }
+      if (res.taken.length){
+        notice("<strong>" + res.taken.length + " day" + (res.taken.length === 1 ? "" : "s") +
+               " skipped.</strong> Station " + n + " had already been taken there.");
+      }
+      renderAll();
+
+      /* Bookkeeping only, and only for a real artist on a committed booking.
+         Holds have nobody behind them. A failure here must not make a booking
+         that did succeed look like it failed. */
+      if (name !== HOLD && email){
+        upsertArtist(name, email).catch(function(e){
+          console.error("[station board] Booking saved, but the artist record didn't update:", e && e.code, e);
+        });
+      }
+    }).catch(function(e){ writeFailed(e, "That booking didn't save."); });
+  }
+
   function release(dates, n){
-    dates.forEach(function(d){ delete state.bookings[d + "|" + n]; });
-    renderAll();
-    if (!state.db) return;
+    if (!state.db){ noDb("That change"); return; }
     dates.forEach(function(d){
-      state.db.doc("bookings/" + d + "_s" + n).delete()
+      deleteDoc(bookingRef(d, n))
         .catch(function(e){ writeFailed(e, "Couldn't free that station."); });
     });
   }
 
   function setClosed(dates, val){
-    dates.forEach(function(d){ if (val) state.closed[d] = true; else delete state.closed[d]; });
-    renderAll();
-    if (!state.db) return;
+    if (!state.db){ noDb("That change"); return; }
     dates.forEach(function(d){
-      var doc = state.db.doc("closures/" + d);
-      var p = val ? doc.set({ date:d, closed:true, ts:Date.now() }) : doc.delete();
+      var ref = doc(state.db, "closures", d);
+      var p = val
+        ? setDoc(ref, { date:d, closed:true, ts: serverTimestamp() })
+        : deleteDoc(ref);
       p.catch(function(e){ writeFailed(e, "Couldn't change that day."); });
     });
   }
 
   function addEvent(date, time, title){
+    if (!state.db){ noDb("That event"); return; }
     var id = date + "_" + String(time).replace(":","");
-    state.events[id] = { date:date, time:time, title:title };
-    renderAll();
-    if (!state.db) return;
-    state.db.doc("events/" + id).set({ date:date, time:time, title:title, ts:Date.now() })
-      .catch(function(e){ writeFailed(e, "That event didn't save."); });
+    setDoc(doc(state.db, "events", id), {
+      date: date, time: time, title: title, ts: serverTimestamp()
+    }).catch(function(e){ writeFailed(e, "That event didn't save."); });
   }
 
   function removeEvent(id){
-    delete state.events[id];
-    renderAll();
-    if (!state.db) return;
-    state.db.doc("events/" + id).delete()
+    if (!state.db){ noDb("That change"); return; }
+    deleteDoc(doc(state.db, "events", id))
       .catch(function(e){ writeFailed(e, "Couldn't remove that event."); });
   }
 
   function writeFailed(err, msg){
     var code = (err && (err.code || err.name)) || "";
-    if (code === "not_granted" || code === "not_writer" || code === "permission_denied"){
+    console.error("[station board] " + msg, code, err);
+    if (code === "permission-denied" || code === "unauthenticated"){
       state.readOnly = true;
-      notice("<strong>View only.</strong> You can read the board but not change it — ask the studio for edit access on the link.");
+      notice("<strong>View only.</strong> The board refused that change \u2014 its security rules don't allow it.");
+    } else if (code === "unavailable"){
+      notice("<strong>" + msg + "</strong> The board is offline right now; it will retry on its own.");
     } else {
-      notice("<strong>" + msg + "</strong> Reload to see the current board.");
+      notice("<strong>" + msg + "</strong> Nothing was changed. See the browser console for details.");
     }
     renderAll();
   }
@@ -1449,98 +1527,103 @@ input,select{font:inherit; color:var(--ink)}
   setManager(state.isManager, false);
   setConn("", "Connecting…");
 
+  /* ---------- Firestore ---------- */
+  function markLive(){
+    if (state.connected) return;
+    state.connected = true;
+    setConn("live","Live \u2014 saved for everyone");
+    notice("");
+  }
+
+  function listenFailed(what, err){
+    console.error("[station board] " + what + " listener failed:", err && err.code, err);
+    state.connected = false;
+    setConn("offline","Not connected");
+    if (err && err.code === "permission-denied"){
+      state.readOnly = true;
+      notice("<strong>Can't read the board.</strong> Firestore refused the request \u2014 check the security rules for the <em>" + what + "</em> collection.");
+    } else {
+      notice("<strong>Not connected.</strong> The board can't reach Firestore, so what you see may be out of date and nothing will save. See the browser console.");
+    }
+    renderAll();
+  }
+
+  /* Bookings are watched in a window around the month on screen, so the
+     listener stays small as the collection grows. */
   function subscribe(){
     if (!state.db) return;
     if (state.unsub){ try { state.unsub(); } catch(e){} state.unsub = null; }
-    var col = state.db.collection("bookings");
-    var q = col;
-    try {
-      var b = monthBounds(state.view);
-      q = col.where("date", ">=", addDays(b[0], -40)).where("date", "<=", addDays(b[1], 40));
-    } catch(e){ q = col; }
 
-    function apply(snap){
+    var b = monthBounds(state.view);
+    var q = query(
+      collection(state.db, "bookings"),
+      where("date", ">=", addDays(b[0], -40)),
+      where("date", "<=", addDays(b[1], 40))
+    );
+
+    state.unsub = onSnapshot(q, function(snap){
       var next = {};
-      docsOf(snap).forEach(function(d){
+      snap.forEach(function(docSnap){
+        var d = docSnap.data() || {};
         if (!d.date || !d.station || !d.artist) return;
         next[d.date + "|" + d.station] = { artist:d.artist, email:d.email || "", example:!!d.example };
       });
       state.bookings = next;
+      markLive();
       renderAll();
-    }
-    if (typeof q.onSnapshot === "function"){
-      try { state.unsub = q.onSnapshot(apply, function(){ setConn("offline","Live updates off"); }); return; }
-      catch(e){}
-    }
-    if (typeof q.get === "function") q.get().then(apply).catch(function(){});
+    }, function(err){ listenFailed("bookings", err); });
   }
 
   function loadStatics(){
-    var cc = state.db.collection("closures");
-    function applyClosed(snap){
+    if (state.unsubClosed){ try { state.unsubClosed(); } catch(e){} }
+    state.unsubClosed = onSnapshot(collection(state.db, "closures"), function(snap){
       var next = {};
-      docsOf(snap).forEach(function(d){ if (d.date && d.closed) next[d.date] = true; });
+      snap.forEach(function(docSnap){
+        var d = docSnap.data() || {};
+        if (d.date && d.closed) next[d.date] = true;
+      });
       state.closed = next;
+      markLive();
       renderAll();
-    }
-    if (typeof cc.onSnapshot === "function"){
-      try { cc.onSnapshot(applyClosed, function(){}); return; } catch(e){}
-    }
-    if (typeof cc.get === "function") cc.get().then(applyClosed).catch(function(){});
+    }, function(err){ listenFailed("closures", err); });
 
-    var ec = state.db.collection("events");
-    function applyEvents(snap){
+    if (state.unsubEvents){ try { state.unsubEvents(); } catch(e){} }
+    state.unsubEvents = onSnapshot(collection(state.db, "events"), function(snap){
       var next = {};
-      docsOf(snap).forEach(function(d){
+      snap.forEach(function(docSnap){
+        var d = docSnap.data() || {};
         if (!d.date || !d.title) return;
-        next[d.__id || (d.date + "_" + String(d.time || "").replace(":",""))] =
-          { date:d.date, time:d.time || "00:00", title:d.title };
+        next[docSnap.id] = { date:d.date, time:d.time || "00:00", title:d.title };
       });
       state.events = next;
+      markLive();
       renderAll();
-    }
-    if (typeof ec.onSnapshot === "function"){
-      try { ec.onSnapshot(applyEvents, function(){}); return; } catch(e){}
-    }
-    if (typeof ec.get === "function") ec.get().then(applyEvents).catch(function(){});
+    }, function(err){ listenFailed("events", err); });
   }
 
   function start(){
-    if (!window.claude || typeof window.claude.use !== "function"){ goLocal(); return; }
-    window.claude.use("user").then(function(u){
-      if (!u) return;
-      /* Whoever can edit the hosted page is the studio — no code needed. */
-      try { if (typeof u.canEdit === "function" && u.canEdit() === true) setManager(true, false); } catch(e){}
-      try {
-        if (typeof u.can === "function" && u.can("data.write") === false){
-          state.readOnly = true;
-          notice("<strong>View only.</strong> You can read the board but not book a station — ask the studio for edit access.");
-        }
-      } catch(e){}
+    try {
+      var app = initializeApp(firebaseConfig);
+      state.db = getFirestore(app);
+    } catch(e){
+      console.error("[station board] Firebase failed to initialise:", e);
+      setConn("offline","Not connected");
+      notice("<strong>Not connected.</strong> Firebase didn't start, so nothing on this page will save. See the browser console.");
       renderAll();
-    }).catch(function(){});
-    window.claude.use("db").then(function(db){
-      if (!db){ goLocal(); return; }
-      state.db = db;
-      setConn("live","Live — saved for everyone");
-      loadStatics();
-      subscribe();
-    }).catch(function(){ goLocal(); });
-  }
-
-  function goLocal(){
-    if (state.localOnly || state.db) return;
-    state.localOnly = true;
-    setConn("offline","Preview only — not saving");
-    notice("<strong>Preview mode.</strong> This copy isn't connected to a saved board, so anything booked here disappears on reload.");
-    state.bookings = {};
-    state.closed = {};
-    state.events = {};
-    renderAll();
+      return;
+    }
+    loadStatics();
+    subscribe();
   }
 
   start();
-  setTimeout(goLocal, 11000);
+  /* If nothing has arrived after a while, say so rather than implying it saved. */
+  setTimeout(function(){
+    if (!state.connected){
+      setConn("offline","Not connected");
+      notice("<strong>Still connecting.</strong> Nothing will save until the board reaches Firestore. Check your connection, then reload.");
+    }
+  }, 12000);
 })();
 </script>
 </body>
