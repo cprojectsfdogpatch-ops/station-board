@@ -165,11 +165,11 @@ input,select{font:inherit; color:var(--ink)}
   border:0; box-shadow:inset 0 0 0 1px var(--line); border-radius:var(--r-sm);
   text-align:center; transition:background .14s, box-shadow .14s;
 }
-.day:hover{background:var(--tint-2)}
+@media (hover:hover){ .day:hover{background:var(--tint-2)} }
 .day.blank{background:transparent; box-shadow:none; pointer-events:none}
 /* days gone by recede; today and everything ahead keep the live surface */
 .day.past{background:var(--ground); box-shadow:none}
-.day.past:hover{background:var(--tint-2)}
+@media (hover:hover){ .day.past:hover{background:var(--tint-2)} }
 .day.past .dnum{color:var(--muted); font-weight:400}
 .day.past .cnt{color:var(--muted); opacity:.75}
 .day.past .pip{opacity:.4}
@@ -1466,6 +1466,15 @@ const firebaseConfig = {
     return e.target && e.target.closest ? e.target.closest(".day[data-date]") : null;
   }
 
+  /* Touch has no hover, and iOS suppresses the click entirely when a mouseover
+     handler rewrites the page — which is what the range preview does. So on a
+     finger we skip hover-preview and drag-select and let the plain tap through. */
+  var touchMode = false;
+  document.addEventListener("pointerdown", function(e){
+    touchMode = (e.pointerType === "touch" || e.pointerType === "pen");
+  }, true);
+  document.addEventListener("touchstart", function(){ touchMode = true; }, { passive:true, capture:true });
+
   gridEl.addEventListener("click", function(e){
     /* a drag already settled the selection; ignore the click that follows it */
     if (state.suppressClick){ state.suppressClick = false; return; }
@@ -1475,6 +1484,7 @@ const firebaseConfig = {
   });
 
   gridEl.addEventListener("mousedown", function(e){
+    if (touchMode) return;
     if (e.button !== 0) return;
     var cell = cellOf(e);
     if (!cell) return;
@@ -1484,6 +1494,7 @@ const firebaseConfig = {
   });
 
   gridEl.addEventListener("mouseover", function(e){
+    if (touchMode) return;
     var cell = cellOf(e);
     if (!cell) return;
     var k = cell.getAttribute("data-date");
