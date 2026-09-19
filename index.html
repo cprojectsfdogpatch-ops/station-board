@@ -1253,6 +1253,38 @@ const firebaseConfig = {
     });
   }
 
+  /* ---------- Google Sheet mirror (secondary, best effort) ----------
+     Firestore stays the source of truth. This runs only after a booking has
+     committed, never blocks the UI, and is never retried — a retry here would
+     add a duplicate row to the sheet. The response is opaque on purpose:
+     "no-cors" with a text/plain body is the one shape a browser can POST to an
+     Apps Script web app without a CORS preflight it cannot answer, so the Apps
+     Script must read the JSON from e.postData.contents. */
+  var SHEET_URL = "https://script.google.com/macros/s/AKfycbwY_m11bjZ8rFZzaheKbiCfEvC-1Cg0MN05RLQyWtw0VdVyklD11gI6mptmLN0cByNy/exec";
+
+  function mirrorToSheet(date, station, artist, email){
+    if (!SHEET_URL || typeof fetch !== "function") return;
+    function shrug(e){
+      console.warn("[station board] Booking is saved in Firestore; the Google Sheet row for " +
+                   date + " station " + station + " did not go through:", e);
+    }
+    try {
+      var p = fetch(SHEET_URL, {
+        method: "POST",
+        mode: "no-cors",
+        keepalive: true,
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          date: date,
+          station: station,
+          artist: artist,
+          email: email || ""
+        })
+      });
+      if (p && typeof p.catch === "function") p.catch(shrug);
+    } catch(e){ shrug(e); }
+  }
+
   function write(dates, n, name, email){
     if (!state.db){ noDb("That booking"); return; }
     notice("");
@@ -1293,6 +1325,8 @@ const firebaseConfig = {
         upsertArtist(name, email).catch(function(e){
           console.error("[station board] Booking saved, but the artist record didn't update:", e && e.code, e);
         });
+        /* One row per day that actually committed. Skipped days send nothing. */
+        booked.forEach(function(d){ mirrorToSheet(d, n, name, email); });
       }
     }).catch(function(e){ writeFailed(e, "That booking didn't save."); });
   }
